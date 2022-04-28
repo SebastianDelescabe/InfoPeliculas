@@ -2,7 +2,7 @@ import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import swAlert from 'sweetalert'
-import { Card } from './index'
+import { Card } from '../index'
 
 const Home = () => {
     //Si quiero salir de componente listado si no tengo nada en el sessionstorage

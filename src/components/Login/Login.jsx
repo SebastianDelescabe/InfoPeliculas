@@ -26,13 +26,13 @@ const Login = () => {
             return
         }
 
-        if (email !== 'challenge@alkemy.org' || password !== 'react') {
+        if (email !== 'delescabe@gmail.com' || password !== 'react') {
             swal("", "Credenciales invalidas", "warning");
             return
         }
 
         // axios.post('url del endopoint','{objeto que la api espera')
-        axios.post('http://challenge-react.alkemy.org', { email, password })
+        axios.post('http://challenge-react.alkemy.org', { email:'challenge@alkemy.org', password })
             .then(response => {
                 swal("Buen trabajo", "Ingresaste Correctamente", "success");
                 const token = response.data.token;

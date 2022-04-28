@@ -4,7 +4,7 @@ import Header from "./Header/Header";
 import Login from './Login/Login';
 import Search from "./Search/Search";
 import Results from "./Search/Results";
-import Home from "./Home";
+import Home from "./Home/Home";
 
 export {
     Card,
