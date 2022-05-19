@@ -1,25 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
 import { Navigate } from 'react-router-dom'
 import { AiFillStar } from 'react-icons/ai';
+import { getInfoById } from '../../helpers/getInfoById';
 
 const Detail = () => {
 
-  const [movieData, setMovieData] = useState(null)
   const token = sessionStorage.getItem('token');
+  const [movieData, setMovieData] = useState(null)
 
   let query = new URLSearchParams(window.location.search);
   let movieID = query.get('movieID');
 
   useEffect(() => {
-    const endPoint = `https://api.themoviedb.org/3/movie/${movieID}?api_key=c1144f1a8afd4fbb4c3dcab9e9d70d36&language=es-ES&external_source=imdb_id`;
-    axios.get(endPoint)
-      .then((response) => {
-        setMovieData(response.data)
-      })
-      .catch(error => {
-        console.log(error)
-      })
+    getInfoById(movieID)
+    .then((response) => {
+      setMovieData(response)
+    })
   }, [movieID])
 
   const handleOnBack = () => {

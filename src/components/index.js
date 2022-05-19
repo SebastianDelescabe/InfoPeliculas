@@ -5,6 +5,8 @@ import Login from './Login/Login';
 import Search from "./Search/Search";
 import Results from "./Search/Results";
 import Home from "./Home/Home";
+import Favorites from "./Favorites/Favorites";
+
 
 export {
     Card,
@@ -13,5 +15,6 @@ export {
     Login,
     Search,
     Results,
-    Home
+    Home,
+    Favorites
 }

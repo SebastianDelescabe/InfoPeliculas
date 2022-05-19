@@ -1,16 +1,10 @@
-.favourite-btn {
-    width: 30px;
-    height: 30px;
-    background-color:black;
-    border-radius: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
+.fav-icon {
+    color: red;
+    z-index: 100;
+    right: 0;
+    border: none;
+    font-size: 35px;
+    background-color: transparent;
     position: absolute;
-    right: 10px;
-    top:10px;
-
-    border:none;
     cursor: pointer;
 }

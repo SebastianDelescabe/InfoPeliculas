@@ -1,7 +1,7 @@
 import axios from 'axios'
 import swal from 'sweetalert'
 import React from 'react'
-import { useNavigate,Navigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 
 const Login = () => {
 
@@ -32,7 +32,7 @@ const Login = () => {
         }
 
         // axios.post('url del endopoint','{objeto que la api espera')
-        axios.post('http://challenge-react.alkemy.org', { email:'challenge@alkemy.org', password })
+        axios.post('http://challenge-react.alkemy.org', { email: 'challenge@alkemy.org', password })
             .then(response => {
                 swal("Buen trabajo", "Ingresaste Correctamente", "success");
                 const token = response.data.token;
@@ -48,18 +48,27 @@ const Login = () => {
 
     return (
         <>
-         {token && <Navigate to='/listado' />}
+            {token && <Navigate to='/listado' />}
             <div className='col-6 offset-3 mt-5'>
                 <h1>Formulario Login</h1>
                 <form onSubmit={sumbitHandler}>
                     <label className='form-label d-block mt-2'>
                         <span>Correo Electronico:</span><br />
-                        <input className='form-control' type='text' name="email" />
+                        <input
+                            className='form-control'
+                            type='text'
+                            name="email"
+                            value="delescabe@gmail.com"
+                        />
                     </label>
                     <br />
                     <label className='form-label d-block mt-2'>
                         <span>Contraseña:</span><br />
-                        <input type="password" name="password" className='form-control' />
+                        <input
+                            type="password"
+                            name="password"
+                            className='form-control'
+                        />
                     </label>
                     <br />
                     <button className='btn btn-success mt-2' type="sumbit">Ingresar</button>
