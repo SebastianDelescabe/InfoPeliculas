@@ -6,7 +6,7 @@ import { AppContext } from '../../helpers/AppContext';
 const Card = ({ movie, moviesResults, setMoviesResults }) => {
 
     const { setMovies, movies, favorites, setFavorites } = useContext(AppContext)
-    localStorage.setItem('favorites', JSON.stringify(favorites)) //Guardo cambios que se van generando en favoritos
+    localStorage.setItem('favorites', JSON.stringify(favorites)) //Guardo en favoritos al hacer f5
 
     //---Lo importante para entender,es saber que tipo de pelicula se quiere agregar a favoritos, puede ser un resultado de busqueda o una de mi lista por "default"--
 
@@ -57,37 +57,49 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
             //Guardo en items peliculas originales ya que se va a modificar una de ellas
             items = [...movies]
         }
-
         //3.Para los dos es igual, busco en mi estado (el que haya entrado en el paso aterior) el indice de la pelicula que se clickeó
         const index = items.findIndex(e => e.id === movie.id)
         //* Uso condicion en caso de no haber entrado y definido items */
-        if(index !== -1 ){
+        if (index !== -1) {
             items[index].favorite = false  //Cambio su propiedad para setear en falso y sacar la pelicula de favoritos
         }
-
         //4.Hago la misma condicion saber cual estado actualizar.
         if (moviesResults) {
             setMoviesResults(items)//Guardo cambios para que se actualice en vivo el cambio de "corazon"
             localStorage.setItem('results', JSON.stringify(items))
+
         } else {
             setMovies(items)//Guardo cambios para que se actualice en vivo el cambio de "corazon"
-            localStorage.setItem('movies', JSON.stringify(movies)) //Guardo los cambios en localStorage para al refrescar aparezca como la ultima vez.
+            localStorage.setItem('movies', JSON.stringify(items)) //Guardo los cambios en localStorage para al refrescar aparezca como la ultima vez.
         }
     }
 
+    console.log(movie.release_date);
+
     return (
-        <div className='col-3'>
-            <div className=" animate__animated animate__fadeIn animate__delay-0.2s card my-4">
-                <Link to={`/detalle?movieID=${movie.id}`}>
-                    <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`} height={420} width={305} alt="Not Found" />
+        <div className='col-3 '>
+            <div className=" bg-black animate__animated animate__fadeIn animate__delay-0.2s card my-5 ">
+                <Link to={`/detail?movieID=${movie.id}`}>
+                    <img
+                        src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
+                        height={420}
+                        width={305}
+                        alt="Not Found"
+                    />
                 </Link>
                 {
-                    movie.favorite ? <button onClick={deleteFavorite} className='fav-icon'>♥</button> : <button onClick={addFavorite} className='fav-icon'>♡</button>
+                    movie.favorite ? <button onClick={deleteFavorite} className='fav-icon'>♥</button> :
+                        !movie.upcoming ?
+                            <button onClick={addFavorite} className='fav-icon'>♡</button> :
+                            null
                 }
-                <div className="card-body">
-                    <h5 className="card-title m2">{movie.title.substring(0, 25)}</h5>
-                    <p className="card-text">{movie.overview.substring(0, 60)}...</p>
-                    <Link to={`/detalle?movieID=${movie.id}`} style={{ display: 'flex', justifyContent: 'center' }} className="btn btn-info">Detalles</Link>
+                <div className="card-body " >
+                    <h5 className="card-title m2 text-center text-light">{movie.title.substring(0, 25)}</h5>
+                    {
+                        movie.upcoming ? <p className="card-text text-center text-danger text-light">{movie.release_date}</p>
+                            : <p className="card-text text-center " style={{ color: 'rgb(105, 105, 105)' }}>{movie.overview.substring(0, 60)}...</p>
+                    }
+                    <Link to={`/detail?movieID=${movie.id}`} style={{ display: 'flex', justifyContent: 'center' }} className="btn btn-danger">Detalles</Link>
                 </div>
             </div>
         </div>

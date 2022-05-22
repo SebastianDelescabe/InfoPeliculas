@@ -12,9 +12,7 @@ const Results = () => {
     const [searchParams, setSearchParams] = useSearchParams(); /* eslint-disable */
     const keyword = searchParams.get("keyword");
 
-    // const localResults = JSON.parse(localStorage.getItem('results')) || []
-
-    const [moviesResults, setMoviesResults] = useState([ ]);
+    const [moviesResults, setMoviesResults] = useState([]);
 
     useEffect(() => {
         searchResults(keyword)
@@ -22,15 +20,17 @@ const Results = () => {
                 if (response.length === 0) {
                     swal("", "No se encontraron resultados", "warning");
                     setTimeout(() => {
-                        navigate('/listado')
+                        navigate('/home')
                     }, 1000);
                 } else {
                     setMoviesResults(response);
+                    localStorage.setItem('results', JSON.stringify(response))
                 }
             })
             .catch(error => {
                 console.log(error);
             })
+
     }, [keyword]); //va a estar atento a cambios en KeyWord
 
     return (

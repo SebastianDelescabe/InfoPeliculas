@@ -22,16 +22,28 @@ const Search = () => {
             swal("", "Debe escribir cuatro o mas caracteres", "warning");
         } else {
             e.currentTarget.text.value = '';
-            navigate(`/resultados?keyword=${keyword}`);
+            navigate(`/results?keyword=${keyword}`);
         }
     }
 
     return (
-        <form onSubmit={sumbitHandler} className='d-flex aling-items-center'>
+        <form onSubmit={sumbitHandler}
+            className='d-flex aling-items-center'
+        >
             <label className='form-label mb-0'>
-                <input className='form-control' name='text' style={{ width: 350, marginLeft: 150 }} type='text' placeholder='Buscar...' />
+                <input
+                    className='form-control'
+                    name='text'
+                    style={{ height: 30, width: 350, marginLeft: 20, marginTop: 4 }}
+                    type='text'
+                    placeholder='Buscar...' />
             </label>
-            <button className='btn btn-success' type="sumbit" style={{ marginRight: 10 }}>Buscar</button>
+            <button
+                className='btn btn-danger bg-transparent'
+                type="sumbit"
+                style={{ marginRight: 10, border: 'none', fontSize: 18 }}
+            >
+                🔍</button>
         </form>
     )
 }

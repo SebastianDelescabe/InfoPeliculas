@@ -1,0 +1,10 @@
+import { Navigate } from "react-router-dom";
+
+const PrivateRoute = ({ children }) => { //Children son los componentes que contiene privateRoute
+
+  const token = sessionStorage.getItem('token')
+
+  return token ? children : <Navigate to='/login' />
+}
+
+export default PrivateRoute
