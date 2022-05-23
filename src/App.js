@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { Results, Login, Detail, Home, Header, Favorites } from './components';
+import React, { useEffect, useState } from 'react';
 import { AppContext } from './helpers/AppContext';
 import { getInfo } from './helpers/getInfo';
 import swal from 'sweetalert';
 
 import 'animate.css';
-import './app.css'
+import './app.css';
+import AppRouter from './routes/AppRoute';
 
 function App() {
 
-  const localMovies = JSON.parse(localStorage.getItem('movies'))
-  const localFavorites = JSON.parse(localStorage.getItem('favorites')) || []
+  const localMovies = JSON.parse(localStorage.getItem('movies')) || [];
+  const localFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
-  const [movies, setMovies] = useState(localMovies)
-  const [favorites, setFavorites] = useState(localFavorites)
+  const [movies, setMovies] = useState(localMovies);
+  const [favorites, setFavorites] = useState(localFavorites);
 
   useEffect(() => {
-    if (!movies) { /* eslint-disable */
+    if (movies.length === 0) { /* eslint-disable */
       getInfo()
         .then((response) => {
           setMovies(response)
+          localStorage.setItem('movies', JSON.stringify(response))
         })
         .catch(err => {
           swal("Error", "No se pudo cargar informacion", "error");
@@ -35,16 +35,7 @@ function App() {
       favorites,
       setFavorites
     }}>
-      <div className='container mt-3'>
-        <Header />
-        <Routes >
-          <Route exact path="/" element={<Login />} />
-          <Route path="/listado" element={<Home />} />
-          <Route path="/detalle" element={<Detail />} />
-          <Route path="/resultados" element={<Results />} />
-          <Route path="/favoritos" element={<Favorites />} />
-        </Routes >
-      </div>
+      <AppRouter />
     </AppContext.Provider>
   );
 }

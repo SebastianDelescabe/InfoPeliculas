@@ -38,7 +38,7 @@ const Login = () => {
                 const token = response.data.token;
                 sessionStorage.setItem('token', token) //Lo que guardas en el session storage y como lo guardas.. Solo guarda STRINGS HACERLE STRINGIFY
                 sessionStorage.setItem('Nombre', 'Sebastian Delescabe') //Lo que guardas en el session storage y como lo guardas.. Solo guarda STRINGS HACERLE STRINGIFY
-                return navigate('/listado')
+                return navigate('/home')
 
                 //const newToken = sessionStorage.getItem('token') //Asi traigo info del session storage
             });
@@ -48,7 +48,7 @@ const Login = () => {
 
     return (
         <>
-            {token && <Navigate to='/listado' />}
+            {token && <Navigate to='/home' />}
             <div className='col-6 offset-3 mt-5'>
                 <h1>Formulario Login</h1>
                 <form onSubmit={sumbitHandler}>

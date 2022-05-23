@@ -1,5 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Akshar:wght@600&family=Nunito:wght@600&display=swap');
+
+body {
+    font-family: 'Akshar', sans-serif;
+    font-family: 'Nunito', sans-serif;
+    overflow-y: scroll;
+    background-color: black;
+}
+
+
+body::-webkit-scrollbar {
+    width: 3px;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: rgb(189, 11, 11);
+}
+
 .fav-icon {
     color: red;
+    
     z-index: 100;
     right: 0;
     border: none;
@@ -7,4 +26,22 @@
     background-color: transparent;
     position: absolute;
     cursor: pointer;
+}
+
+.ul-detail {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.li-detail {
+    padding-left: 1em;
+    text-indent: -.7em;
+}
+
+.li-detail::before {
+    content: "•";
+    color: #f0ad4e;
+    margin-right: 5px;
+    /* or whatever color you prefer */
 }
