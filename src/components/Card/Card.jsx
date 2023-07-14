@@ -80,12 +80,23 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
         <div className='col-3 '>
             <div className=" bg-black animate__animated animate__fadeIn animate__delay-0.2s card my-5 ">
                 <Link to={`/detail?movieID=${movie.id}`}>
-                    <img
-                        src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
-                        height={420}
-                        width={305}
-                        alt="Not Found"
-                    />
+                    {
+                        movie.poster_path !== null ?
+                            <img
+                                src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
+                                height={420}
+                                width={305}
+                                alt="Not Found"
+                            />
+                            :
+                            <img
+                                src={`https://codigodelbonus.com/wp-content/themes/wp-theme-bc-core-child-betbonuscode/assets/public/img/no-img.jpg`}
+                                height={420}
+                                width={305}
+                                alt="Not Found"
+                            />
+
+                    }
                 </Link>
                 {
                     movie.favorite ? <button onClick={deleteFavorite} className='fav-icon'>♥</button> :

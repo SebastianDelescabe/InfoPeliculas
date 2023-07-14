@@ -1,15 +1,15 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../../helpers/AppContext';
-import Card from '../card/Card';
+import Card from '../Card/Card.jsx';
 
 const Favorites = () => {
 
     const { favorites } = useContext(AppContext)
 
-    localStorage.setItem('favorites', JSON.stringify(favorites)) 
+    localStorage.setItem('favorites', JSON.stringify(favorites))
 
     return (
-        <div className='row'>
+        <div className=' favorites row'>
             {favorites && favorites.map((movie) => (
                 <Card movie={movie} key={movie.id} />
             ))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { upcoming } from '../../helpers/upcoming'
-import Card from '../card/Card'
+import Card from '../Card/Card'
 
 const Upcoming = () => {
 

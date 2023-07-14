@@ -34,7 +34,7 @@ const Results = () => {
     }, [keyword]); //va a estar atento a cambios en KeyWord
 
     return (
-        <>
+        <div className='search'>
             <h2>Resultados <em> {keyword}</em></h2>
             <div className='row'>
                 {
@@ -48,7 +48,7 @@ const Results = () => {
                     ))
                 }
             </div>
-        </>
+        </div>
     )
 }
 

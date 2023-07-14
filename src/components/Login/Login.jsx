@@ -1,7 +1,7 @@
-import axios from 'axios'
 import swal from 'sweetalert'
 import React from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom';
+import { nanoid } from "nanoid";
 
 const Login = () => {
 
@@ -26,22 +26,13 @@ const Login = () => {
             return
         }
 
-        if (email !== 'delescabe@gmail.com' || password !== 'react') {
+        if (email !== 'deleflix@delescabe.com.ar' || password !== 'react') {
             swal("", "Credenciales invalidas", "warning");
             return
         }
-
-        // axios.post('url del endopoint','{objeto que la api espera')
-        axios.post('http://challenge-react.alkemy.org', { email: 'challenge@alkemy.org', password })
-            .then(response => {
-                swal("Buen trabajo", "Ingresaste Correctamente", "success");
-                const token = response.data.token;
-                sessionStorage.setItem('token', token) //Lo que guardas en el session storage y como lo guardas.. Solo guarda STRINGS HACERLE STRINGIFY
-                sessionStorage.setItem('Nombre', 'Sebastian Delescabe') //Lo que guardas en el session storage y como lo guardas.. Solo guarda STRINGS HACERLE STRINGIFY
-                return navigate('/home')
-
-                //const newToken = sessionStorage.getItem('token') //Asi traigo info del session storage
-            });
+        let token = nanoid();
+        sessionStorage.setItem('token', token)
+        return navigate('/home')
     }
 
     const token = sessionStorage.getItem('token');
@@ -50,19 +41,19 @@ const Login = () => {
         <>
             {token && <Navigate to='/home' />}
             <div className='col-6 offset-3 mt-5'>
-                <h1>Formulario Login</h1>
+                <h1 style={{ color: 'white' }}>Iniciar Sesión</h1>
                 <form onSubmit={sumbitHandler}>
-                    <label className='form-label d-block mt-2'>
+                    <label style={{ color: 'white' }} className='form-label d-block mt-2 pt-4'>
                         <span>Correo Electronico:</span><br />
                         <input
                             className='form-control'
                             type='text'
                             name="email"
-                            value="delescabe@gmail.com"
+                            value="deleflix@delescabe.com.ar"
                         />
                     </label>
                     <br />
-                    <label className='form-label d-block mt-2'>
+                    <label style={{ color: 'white' }} className='form-label d-block mt-2 pt-2'>
                         <span>Contraseña:</span><br />
                         <input
                             type="password"
@@ -70,6 +61,7 @@ const Login = () => {
                             className='form-control'
                         />
                     </label>
+                    <label style={{ color: 'white' }} className='form-label d-block mt-2 pt-2'>Contraseña: react</label>
                     <br />
                     <button className='btn btn-success mt-2' type="sumbit">Ingresar</button>
                 </form>
@@ -79,3 +71,6 @@ const Login = () => {
 }
 
 export default Login
+
+
+

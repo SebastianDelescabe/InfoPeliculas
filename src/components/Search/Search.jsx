@@ -34,9 +34,10 @@ const Search = () => {
                 <input
                     className='form-control'
                     name='text'
-                    style={{ height: 30, width: 350, marginLeft: 20, marginTop: 4 }}
                     type='text'
-                    placeholder='Buscar...' />
+                    placeholder='Buscar...'
+                    defaultValue="Initial value"
+                />
             </label>
             <button
                 className='btn btn-danger bg-transparent'

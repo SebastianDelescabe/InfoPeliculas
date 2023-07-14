@@ -4,7 +4,7 @@ import { getInfo } from './helpers/getInfo';
 import swal from 'sweetalert';
 
 import 'animate.css';
-import './app.css';
+import './App.css';
 import AppRouter from './routes/AppRoute';
 
 function App() {

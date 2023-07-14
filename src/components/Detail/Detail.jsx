@@ -25,7 +25,7 @@ const Detail = () => {
   return (
     <>
       {!token && <Navigate to='/' />}
-      {!movieData && <p>Cargando...</p>}
+      {!movieData && <p class="text-center " >Cargando...</p>}
       {movieData &&
         <div className='row'>
           <div className='col-4 animate__animated animate__fadeInLeft animate__delay-0.2s'>
@@ -41,7 +41,7 @@ const Detail = () => {
             <h2>{movieData.tagline}</h2>
             <h5 className='text-warning'>Sinopsis</h5>
             <p>{movieData.overview}</p>
-            <h5 >Rating: {movieData.vote_average}<AiFillStar style={{ color: '#f0ad4e' }} /></h5>
+            <h5 >Rating: {Math.round(movieData.vote_average)}<AiFillStar style={{ color: '#f0ad4e' }} /></h5>
             <h5>Generos:</h5>
             <ul className='ul-detail'>
               {movieData.genres.map(e => <li className='li-detail' key={e.id}>{e.name}</li>)}

@@ -1,11 +1,11 @@
-import Card from "./card/Card";
-import Detail from "./detail/Detail";
-import Header from "./header/Header";
-import Login from './login/Login';
-import Search from "./search/Search";
-import Results from "./search/Results";
-import Home from "./home/Home";
-import Favorites from "./favorites/Favorites";
+import Card from "./Card/Card";
+import Detail from "./Detail/Detail";
+import Header from "./Header/Header";
+import Login from './Login/Login';
+import Search from "./Search/Search";
+import Results from "./Search/Results";
+import Home from "./Home/Home";
+import Favorites from "./Favorites/Favorites";
 import Upcoming from "./upcoming/Upcoming";
 
 export {
