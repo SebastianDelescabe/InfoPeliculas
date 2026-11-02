@@ -5,8 +5,8 @@ import { AppContext } from '../../helpers/AppContext';
 import { notify } from '../../helpers/notify';
 import { getWatchProviders } from '../../helpers/tmdb';
 
-const Card = ({ movie, moviesResults, setMoviesResults }) => {
-    const { setMovies, movies, favorites, setFavorites } = useContext(AppContext);
+const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWatched, hideFavorite = false }) => {
+    const { setMovies, movies, favorites, setFavorites, watched } = useContext(AppContext);
     const [heartPop, setHeartPop] = useState(false);
     const [watchProviders, setWatchProviders] = useState(undefined);
     const cardRef = useRef(null);
@@ -46,10 +46,14 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
     }, [movie.id, movie.upcoming]);
 
     const updateFavorite = (isFavorite) => {
+        if (isFavorite && watched.some((item) => item.id === movie.id)) {
+            notify('Esta película ya está marcada como vista.', 'info');
+            return;
+        }
         if (isFavorite) {
             setHeartPop(true);
             window.setTimeout(() => setHeartPop(false), 520);
-            notify(`${movie.title || movie.name || 'Película'} se agregó a favoritos`, 'success');
+            notify(`${movie.title || movie.name || 'Película'} se agregó a Películas a mirar`, 'success');
         }
         const updatedMovie = { ...movie, favorite: isFavorite };
         const updatedSource = sourceMovies.map((item) => item.id === movie.id ? updatedMovie : item);
@@ -105,11 +109,11 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
                         <small className='provider-credit'>JustWatch</small>
                     </div>}
                 </Link>
-                {!movie.upcoming && <button
+                {!movie.upcoming && !hideFavorite && <button
                     onClick={() => updateFavorite(!movie.favorite)}
                     className={`fav-icon ${movie.favorite ? 'is-favorite' : ''} ${heartPop ? 'favorite-pop' : ''}`}
-                    aria-label={movie.favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                    title={movie.favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    aria-label={movie.favorite ? 'Quitar de Películas a mirar' : 'Agregar a Películas a mirar'}
+                    title={movie.favorite ? 'Quitar de Películas a mirar' : 'Agregar a Películas a mirar'}
                 >
                     {movie.favorite ? <AiFillHeart /> : <AiOutlineHeart />}
                 </button>}
@@ -118,6 +122,8 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
                     <p className={`card-text ${movie.upcoming ? 'movie-date' : ''}`}>
                         {movie.upcoming ? releaseDate : `${overview.slice(0, 88)}${overview.length > 88 ? '…' : ''}`}
                     </p>
+                    {onMarkWatched && <button type='button' className='card-list-action' onClick={() => onMarkWatched(movie)}>Marcar como vista</button>}
+                    {onUndoWatched && <button type='button' className='card-list-action' onClick={() => onUndoWatched(movie)}>Desmarcar como vista</button>}
                     <Link to={`/detail?movieID=${movie.id}`} className='btn' onClick={rememberHomePosition}>Ver detalles</Link>
                 </div>
             </article>
