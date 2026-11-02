@@ -1,63 +1,44 @@
-import React, { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { AiFillStar } from 'react-icons/ai';
 import { getInfoById } from '../../helpers/getInfoById';
 
 const Detail = () => {
-
   const token = sessionStorage.getItem('token');
-  const [movieData, setMovieData] = useState(null)
-
-  let query = new URLSearchParams(window.location.search);
-  let movieID = query.get('movieID');
+  const [searchParams] = useSearchParams();
+  const movieID = searchParams.get('movieID');
+  const [movieData, setMovieData] = useState(null);
 
   useEffect(() => {
-    getInfoById(movieID)
-      .then((response) => {
-        setMovieData(response)
-      })
-  }, [movieID])
+    if (movieID) getInfoById(movieID).then(setMovieData).catch(() => setMovieData(null));
+  }, [movieID]);
 
-  const handleOnBack = () => {
-    window.history.back();
-  }
+  if (!token) return <Navigate to='/login' replace />;
+  if (!movieData) return <p className='loading-state'>Cargando película…</p>;
+
+  const poster = movieData.poster_path
+    ? `https://image.tmdb.org/t/p/w500/${movieData.poster_path}`
+    : 'https://cloupyblob.blob.core.windows.net/cloupy/image-not-found.png';
+  const releaseDate = movieData.release_date && /^\d{4}-\d{2}-\d{2}$/.test(movieData.release_date)
+    ? movieData.release_date.split('-').reverse().join('-')
+    : movieData.release_date || 'Sin fecha';
 
   return (
-    <>
-      {!token && <Navigate to='/' />}
-      {!movieData && <p class="text-center " >Cargando...</p>}
-      {movieData &&
-        <div className='row'>
-          <div className='col-4 animate__animated animate__fadeInLeft animate__delay-0.2s'>
-            {
-              movieData.poster_path !== null ?
-                <img src={`https://image.tmdb.org/t/p/w500/${movieData.poster_path}`} className='img-fluid my-5' alt='img not found' />
-                :
-                <img src="https://cloupyblob.blob.core.windows.net/cloupy/image-not-found.png" className='img-fluid my-5' alt='img not found' />
-            }
-          </div>
-          <div className='col-8 my-5 text-light d-flex flex-column justify-content-evenly'>
-            <h1 className='text-warning'>{movieData.title}</h1>
-            <h2>{movieData.tagline}</h2>
-            <h5 className='text-warning'>Sinopsis</h5>
-            <p>{movieData.overview}</p>
-            <h5 >Rating: {Math.round(movieData.vote_average)}<AiFillStar style={{ color: '#f0ad4e' }} /></h5>
-            <h5>Generos:</h5>
-            <ul className='ul-detail'>
-              {movieData.genres.map(e => <li className='li-detail' key={e.id}>{e.name}</li>)}
-            </ul>
-            <h5 className='text-danger'>Fecha de estreno: {movieData.release_date}</h5>
-          </div>
-          <button
-            onClick={handleOnBack}
-            style={{ width: '100%' }}
-            className="  btn btn-danger animate__animated animate__fadeInUp animate__delay-2s"
-          >
-            Volver</button>
-        </div>
-      }
-    </>
-  )
-}
+    <section className='detail-layout animate__animated animate__fadeIn'>
+      <img src={poster} className='detail-poster' alt={`Póster de ${movieData.title}`} />
+      <div className='detail-copy'>
+        <h1>{movieData.title}</h1>
+        {movieData.tagline && <p className='detail-tagline'>{movieData.tagline}</p>}
+        <h2>Sinopsis</h2>
+        <p>{movieData.overview || 'Todavía no hay una sinopsis disponible.'}</p>
+        <div className='detail-meta'><span><strong>Rating:</strong> {Number(movieData.vote_average).toFixed(1)} <AiFillStar /></span>
+          <span><strong>Estreno:</strong> {releaseDate}</span></div>
+        <h2>Géneros</h2>
+        <ul className='ul-detail'>{movieData.genres?.map((genre) => <li className='li-detail' key={genre.id}>{genre.name}</li>)}</ul>
+        <button onClick={() => window.history.back()} className='btn back-button'>Volver</button>
+      </div>
+    </section>
+  );
+};
 
-export default Detail
+export default Detail;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom';/* eslint-disable */
-import swal from 'sweetalert'
+import { notify } from '../../helpers/notify';
 import { searchResults } from '../../helpers/searchResults';
 import { Card } from '../index'
 
@@ -18,7 +18,7 @@ const Results = () => {
         searchResults(keyword)
             .then((response) => {
                 if (response.length === 0) {
-                    swal("", "No se encontraron resultados", "warning");
+                    notify('No se encontraron películas para esa búsqueda', 'warning');
                     setTimeout(() => {
                         navigate('/home')
                     }, 1000);
@@ -36,7 +36,7 @@ const Results = () => {
     return (
         <div className='search'>
             <h2>Resultados <em> {keyword}</em></h2>
-            <div className='row'>
+            <div className='movie-grid'>
                 {
                     moviesResults.map((movie) => (
                         <Card

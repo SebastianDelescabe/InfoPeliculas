@@ -1,120 +1,71 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
-import swal from 'sweetalert';
+import { AiFillHeart, AiOutlineHeart } from 'react-icons/ai';
 import { AppContext } from '../../helpers/AppContext';
+import { notify } from '../../helpers/notify';
 
 const Card = ({ movie, moviesResults, setMoviesResults }) => {
+    const { setMovies, movies, favorites, setFavorites } = useContext(AppContext);
+    const [heartPop, setHeartPop] = useState(false);
+    const sourceMovies = moviesResults || movies;
 
-    const { setMovies, movies, favorites, setFavorites } = useContext(AppContext)
-    localStorage.setItem('favorites', JSON.stringify(favorites)) //Guardo en favoritos al hacer f5
-
-    //---Lo importante para entender,es saber que tipo de pelicula se quiere agregar a favoritos, puede ser un resultado de busqueda o una de mi lista por "default"--
-
-    const addFavorite = () => {
-        //Hago una copia del estado que vaya a usar, segun necesite la aplicacion.
-        let items = [];
-
+    const updateFavorite = (isFavorite) => {
+        if (isFavorite) {
+            setHeartPop(true);
+            window.setTimeout(() => setHeartPop(false), 520);
+            notify(`${movie.title || movie.name || 'Película'} se agregó a favoritos`, 'success');
+        }
+        const updatedMovie = { ...movie, favorite: isFavorite };
+        const updatedSource = sourceMovies.map((item) => item.id === movie.id ? updatedMovie : item);
         if (moviesResults) {
-            items = [...moviesResults]
+            setMoviesResults(updatedSource);
+            localStorage.setItem('results', JSON.stringify(updatedSource));
         } else {
-            items = [...movies]
+            setMovies(updatedSource);
+            localStorage.setItem('movies', JSON.stringify(updatedSource));
         }
-        let index = items.findIndex(e => e.id === movie.id);
-        // 3. Reemplazo la propiedad y uso el item, en el siguiente paso agregar ese item al estado favoritos.
-        let item = items[index]
-        item.favorite = true;
+        setFavorites((current) => isFavorite
+            ? current.some((item) => item.id === movie.id) ? current : [...current, updatedMovie]
+            : current.filter((item) => item.id !== movie.id));
+        const nextFavorites = isFavorite
+            ? favorites.some((item) => item.id === movie.id) ? favorites : [...favorites, updatedMovie]
+            : favorites.filter((item) => item.id !== movie.id);
+        localStorage.setItem('favorites', JSON.stringify(nextFavorites));
+    };
 
-        //Verifico que el id no se encuentre en favoritos
-        const inFavorites = favorites.find(favorite => favorite.id === movie.id)
-        if (!inFavorites) {
-            //Si no esta en favoritos lo guardo en el estado favorites
-            setFavorites(favorite => [...favorite, item])
-        } else {
-            //Si ya esta dentro del estado, envio el error
-            swal("Error", "Ya se encuentra en favoritos", "error");
-        }
-        //Si no existe moviesResults, es que no estoy buscando nada y trabajo con mi estado original movies.
-        if (moviesResults) {
-            setMoviesResults(items)//Guardo cambios para que se actualice en vivo el cambio de "corazon"
-            localStorage.setItem('results', JSON.stringify(items))
-        } else {
-            setMovies(items) //Guardo cambios ya que la movie se encuentra en favoritos y necesito cambiar el "corazon"
-            localStorage.setItem('movies', JSON.stringify(items)) //Guardo los cambios en localStorage para al refrescar aparezca como la ultima vez.
-        }
-    }
-
-    const deleteFavorite = () => {
-        //1.Saco elementos de favoritos en copia para no alterar original directamente.
-        let favoritesItems = [...favorites];
-        const deleteFavorite = favoritesItems.filter(e => e.id !== movie.id);
-        setFavorites(deleteFavorite);
-
-        let items = []
-        //2.Si existe moviesResults significa que la pelicula es un resultado de buscar en el searchbar
-        if (moviesResults) {
-            items = [...moviesResults] //Guardo en items peliculas del resultado de la busqueda
-        } else {
-            //Guardo en items peliculas originales ya que se va a modificar una de ellas
-            items = [...movies]
-        }
-        //3.Para los dos es igual, busco en mi estado (el que haya entrado en el paso aterior) el indice de la pelicula que se clickeó
-        const index = items.findIndex(e => e.id === movie.id)
-        //* Uso condicion en caso de no haber entrado y definido items */
-        if (index !== -1) {
-            items[index].favorite = false  //Cambio su propiedad para setear en falso y sacar la pelicula de favoritos
-        }
-        //4.Hago la misma condicion saber cual estado actualizar.
-        if (moviesResults) {
-            setMoviesResults(items)//Guardo cambios para que se actualice en vivo el cambio de "corazon"
-            localStorage.setItem('results', JSON.stringify(items))
-
-        } else {
-            setMovies(items)//Guardo cambios para que se actualice en vivo el cambio de "corazon"
-            localStorage.setItem('movies', JSON.stringify(items)) //Guardo los cambios en localStorage para al refrescar aparezca como la ultima vez.
-        }
-    }
-
-    console.log(movie.release_date);
+    const poster = movie.poster_path
+        ? `https://image.tmdb.org/t/p/w500/${movie.poster_path}`
+        : 'https://cloupyblob.blob.core.windows.net/cloupy/image-not-found.png';
+    const title = movie.title || movie.name || 'Sin título';
+    const overview = movie.overview || 'Todavía no hay una sinopsis disponible.';
+    const releaseDate = movie.release_date && /^\d{4}-\d{2}-\d{2}$/.test(movie.release_date)
+        ? movie.release_date.split('-').reverse().join('-')
+        : movie.release_date || 'Fecha sin confirmar';
 
     return (
-        <div className='col-3 '>
-            <div className=" bg-black animate__animated animate__fadeIn animate__delay-0.2s card my-5 ">
-                <Link to={`/detail?movieID=${movie.id}`}>
-                    {
-                        movie.poster_path !== null ?
-                            <img
-                                src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
-                                height={420}
-                                width={305}
-                                alt="Not Found"
-                            />
-                            :
-                            <img
-                                src={`https://codigodelbonus.com/wp-content/themes/wp-theme-bc-core-child-betbonuscode/assets/public/img/no-img.jpg`}
-                                height={420}
-                                width={305}
-                                alt="Not Found"
-                            />
-
-                    }
+        <div className='col-3'>
+            <article className='movie-card animate__animated animate__fadeIn'>
+                <Link className='poster-link' to={`/detail?movieID=${movie.id}`} aria-label={`Ver ${title}`}>
+                    <img className='movie-poster' src={poster} alt={`Póster de ${title}`} loading='lazy' />
                 </Link>
-                {
-                    movie.favorite ? <button onClick={deleteFavorite} className='fav-icon'>♥</button> :
-                        !movie.upcoming ?
-                            <button onClick={addFavorite} className='fav-icon'>♡</button> :
-                            null
-                }
-                <div className="card-body " >
-                    <h5 className="card-title m2 text-center text-light">{movie.title.substring(0, 25)}</h5>
-                    {
-                        movie.upcoming ? <p className="card-text text-center text-danger text-light">{movie.release_date}</p>
-                            : <p className="card-text text-center " style={{ color: 'rgb(105, 105, 105)' }}>{movie.overview.substring(0, 60)}...</p>
-                    }
-                    <Link to={`/detail?movieID=${movie.id}`} style={{ display: 'flex', justifyContent: 'center' }} className="btn btn-danger">Detalles</Link>
+                {!movie.upcoming && <button
+                    onClick={() => updateFavorite(!movie.favorite)}
+                    className={`fav-icon ${movie.favorite ? 'is-favorite' : ''} ${heartPop ? 'favorite-pop' : ''}`}
+                    aria-label={movie.favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    title={movie.favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                >
+                    {movie.favorite ? <AiFillHeart /> : <AiOutlineHeart />}
+                </button>}
+                <div className='card-body'>
+                    <h2 className='card-title'>{title}</h2>
+                    <p className={`card-text ${movie.upcoming ? 'movie-date' : ''}`}>
+                        {movie.upcoming ? releaseDate : `${overview.slice(0, 88)}${overview.length > 88 ? '…' : ''}`}
+                    </p>
+                    <Link to={`/detail?movieID=${movie.id}`} className='btn'>Ver detalles</Link>
                 </div>
-            </div>
+            </article>
         </div>
-    )
-}
+    );
+};
 
-export default Card
+export default Card;

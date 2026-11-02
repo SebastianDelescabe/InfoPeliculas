@@ -1,15 +1,37 @@
-import axios from "axios";
+import { tmdbGet } from './tmdb';
 
-export const getInfo = async () => {
-    const response = await axios.get('https://api.themoviedb.org/3/discover/movie?api_key=c1144f1a8afd4fbb4c3dcab9e9d70d36&language=es-ES&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_watch_monetization_types=flatrate')
-    const data = response.data.results.map((e) => {
-        return {
-            id: e.id,
-            poster_path: e.poster_path,
-            title: e.title,
-            overview: e.overview,
-            favorite: false
-        }
-    })
-    return data
-}
+const localDate = (date) => {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
+};
+
+export const getInfo = async (page = 1) => {
+    const today = new Date();
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const response = await tmdbGet('/discover/movie', {
+        language: 'es-AR',
+        region: 'AR',
+        sort_by: 'popularity.desc',
+        'primary_release_date.gte': localDate(oneYearAgo),
+        'primary_release_date.lte': localDate(today),
+        include_adult: false,
+        include_video: false,
+        page
+    });
+
+    return {
+        movies: response.data.results
+            .filter((movie) => movie.release_date && movie.release_date <= localDate(today))
+            .map((movie) => ({
+                id: movie.id,
+                poster_path: movie.poster_path,
+                title: movie.title,
+                overview: movie.overview,
+                release_date: movie.release_date,
+                favorite: false
+            })),
+        totalPages: response.data.total_pages
+    };
+};

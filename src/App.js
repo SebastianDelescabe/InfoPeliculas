@@ -1,45 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { AppContext } from './helpers/AppContext';
-import { getInfo } from './helpers/getInfo';
-import swal from 'sweetalert';
-
 import 'animate.css';
 import './App.css';
 import AppRouter from './routes/AppRoute';
 
+function readArrayFromStorage(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(value) ? value : [];
+  } catch (error) {
+    return [];
+  }
+}
+
 function App() {
-
-  const localMovies = JSON.parse(localStorage.getItem('movies')) || [];
-  const localFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-
-  const [movies, setMovies] = useState(localMovies);
-  const [favorites, setFavorites] = useState(localFavorites);
-
-  useEffect(() => {
-    if (movies.length === 0) { /* eslint-disable */
-      getInfo()
-        .then((response) => {
-          setMovies(response)
-          localStorage.setItem('movies', JSON.stringify(response))
-        })
-        .catch(err => {
-          swal("Error", "No se pudo cargar informacion", "error");
-        })
-    }
-  }, [setMovies])
+  const [movies, setMovies] = useState(() => readArrayFromStorage('movies'));
+  const [favorites, setFavorites] = useState(() => readArrayFromStorage('favorites'));
 
   return (
-    <AppContext.Provider value={{
-      movies,
-      setMovies,
-      favorites,
-      setFavorites
-    }}>
+    <AppContext.Provider value={{ movies, setMovies, favorites, setFavorites }}>
       <AppRouter />
     </AppContext.Provider>
   );
 }
 
 export default App;
-
-

@@ -4,6 +4,7 @@ import { Login, Header } from '../components';
 import PublicRoute from './PublicRoute';
 import PrivateRoute from './PrivateRoute';
 import DashboardRoutes from './DashboardRoutes';
+import Toasts from '../components/Toasts/Toasts';
 
 const AppRouter = () => {
     return (
@@ -26,6 +27,7 @@ const AppRouter = () => {
                         }
                     />
                 </Routes>
+                <Toasts />
             </div>
         </BrowserRouter>
     )

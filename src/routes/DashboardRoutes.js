@@ -12,7 +12,7 @@ import {
 
 const DashboardRoutes = () => {
     return (
-        <div className="container">
+        <main className="page-container">
             <Routes>
                 <Route path="/home" element={<Home />} />
                 <Route path="favorites" element={<Favorites />} />
@@ -21,7 +21,7 @@ const DashboardRoutes = () => {
                 <Route path="upcoming" element={<Upcoming />} />
 
             </Routes>
-        </div>
+        </main>
     )
 }
 

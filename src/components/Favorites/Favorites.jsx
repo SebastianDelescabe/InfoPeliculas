@@ -9,11 +9,15 @@ const Favorites = () => {
     localStorage.setItem('favorites', JSON.stringify(favorites))
 
     return (
-        <div className=' favorites row'>
+        <>
+            <h1 className='page-heading'>Mis <span>favoritos</span></h1>
+            {favorites.length === 0 && <p className='empty-state'>Todavía no agregaste películas a favoritos.</p>}
+            <div className='favorites row'>
             {favorites && favorites.map((movie) => (
                 <Card movie={movie} key={movie.id} />
             ))}
-        </div>
+            </div>
+        </>
     )
 }
 

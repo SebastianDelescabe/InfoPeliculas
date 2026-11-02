@@ -1,52 +1,31 @@
 import React from 'react';
-import swal from 'sweetalert'
 import { useNavigate } from 'react-router-dom';
-
+import { FiSearch } from 'react-icons/fi';
+import { notify } from '../../helpers/notify';
 
 const Search = () => {
+    const navigate = useNavigate();
+    const token = sessionStorage.getItem('token');
 
-    const navigate = useNavigate()
+    const submitHandler = (event) => {
+        event.preventDefault();
+        const keyword = event.currentTarget.text.value.trim();
 
-    const token = sessionStorage.getItem('token')
-
-    const sumbitHandler = (e) => {
-        e.preventDefault();
-        const keyword = e.currentTarget.text.value.trim();
-
-        if (!token) {
-            swal("", "Debe iniciar sesión", "warning");
-            e.currentTarget.text.value = ''
-        } else if (keyword.length === 0) {
-            swal("", "Tiene que escribir algo", "warning");
-        } else if (keyword.length < 4) {
-            swal("", "Debe escribir cuatro o mas caracteres", "warning");
-        } else {
-            e.currentTarget.text.value = '';
-            navigate(`/results?keyword=${keyword}`);
+        if (!token) notify('Iniciá sesión para buscar películas', 'warning');
+        else if (!keyword) notify('Escribí el nombre de una película', 'warning');
+        else if (keyword.length < 4) notify('Escribí al menos cuatro caracteres', 'warning');
+        else {
+            event.currentTarget.reset();
+            navigate(`/results?keyword=${encodeURIComponent(keyword)}`);
         }
-    }
+    };
 
     return (
-        <form onSubmit={sumbitHandler}
-            className='d-flex aling-items-center'
-        >
-            <label className='form-label mb-0'>
-                <input
-                    className='form-control'
-                    name='text'
-                    type='text'
-                    placeholder='Buscar...'
-                    defaultValue="Initial value"
-                />
-            </label>
-            <button
-                className='btn btn-danger bg-transparent'
-                type="sumbit"
-                style={{ marginRight: 10, border: 'none', fontSize: 18 }}
-            >
-                🔍</button>
+        <form onSubmit={submitHandler} className='header-search'>
+            <input name='text' type='search' placeholder='Buscar películas…' aria-label='Buscar películas' />
+            <button className='icon-button' type='submit' aria-label='Buscar'><FiSearch /></button>
         </form>
-    )
-}
+    );
+};
 
-export default Search
+export default Search;

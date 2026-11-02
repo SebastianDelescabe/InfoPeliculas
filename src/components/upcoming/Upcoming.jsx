@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { upcoming } from '../../helpers/upcoming'
 import Card from '../Card/Card'
+import { notify } from '../../helpers/notify';
 
 const Upcoming = () => {
 
@@ -11,17 +12,21 @@ const Upcoming = () => {
       .then((response) => {
         setUpcomingData(response)
       })
+      .catch(() => notify('No se pudieron cargar los próximos estrenos', 'error'))
   }, [setUpcomingData])
 
 
   return (
-    <div className='row'>
+    <>
+    <h1 className='page-heading'>Muy <span>próximamente</span></h1>
+    <div className='movie-grid'>
       {
         upcomingData && upcomingData.map((movie) => (
           <Card key={movie.id} movie={movie} />
         ))
       }
     </div>
+    </>
   )
 }
 
