@@ -181,7 +181,7 @@ const Home = () => {
                         <span>Ordenar por</span>
                         <select id='sort-filter' value={selectedSort} onChange={(event) => { setSelectedSort(event.target.value); resetResults(); }}>
                             <option value='popularity.desc'>Popularidad</option>
-                            <option value='vote_average.desc'>Mejor puntaje · 6,5+ · 10k+ votos</option>
+                            <option value='vote_average.desc'>Mejor puntaje</option>
                             <option value='now_playing'>En cines (Argentina)</option>
                         </select>
                     </label>

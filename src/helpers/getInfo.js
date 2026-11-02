@@ -58,7 +58,7 @@ export const getInfo = async (page = 1, providerId = '', monetizationType = 'fla
     };
 
     if (sortBy === 'vote_average.desc') {
-        params['vote_count.gte'] = 10000;
+        params['vote_count.gte'] = 2000;
         params['vote_average.gte'] = 6.5;
     }
     if (providerId) {
