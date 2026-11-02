@@ -3,8 +3,10 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import { notify } from '../../helpers/notify';
 
+/** Pantalla de acceso de demostración con validación local del formulario. */
 const Login = () => {
     const navigate = useNavigate();
+    // Valida los datos de demo, crea una sesión temporal y abre el inicio.
     const submitHandler = (event) => {
         event.preventDefault();
         const email = event.target.email.value.trim();

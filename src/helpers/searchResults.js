@@ -1,15 +1,13 @@
 import { tmdbGet } from './tmdb';
 
+/** Busca películas por texto y conserva solo los campos que usa la interfaz. */
 export const searchResults = async (keyword) => {
     const response = await tmdbGet('/search/movie', { language: 'es-AR', query: keyword });
-    const data = response.data.results.map((e) => {
-        return {
-            id: e.id,
-            poster_path: e.poster_path,
-            title: e.title,
-            overview: e.overview,
-            favorite: false,
-        }
-    })
-    return data
-}
+    return response.data.results.map((movie) => ({
+        id: movie.id,
+        poster_path: movie.poster_path,
+        title: movie.title,
+        overview: movie.overview,
+        favorite: false
+    }));
+};

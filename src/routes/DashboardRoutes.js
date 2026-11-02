@@ -10,6 +10,7 @@ import {
 } from '../components';
 
 
+/** Agrupa las pantallas privadas y adapta el ancho del inicio. */
 const DashboardRoutes = () => {
     const location = useLocation();
     const isHome = location.pathname === '/home';

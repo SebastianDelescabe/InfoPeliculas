@@ -1,10 +1,11 @@
 
 import { tmdbGet } from './tmdb';
 
+/** Carga una ficha completa y busca tráileres en inglés si faltan en español. */
 export const getInfoById = async (movieID) => {
     const response = await tmdbGet(`/movie/${movieID}`, {
         language: 'es-AR',
-        append_to_response: 'videos'
+        append_to_response: 'videos,recommendations,release_dates'
     });
     const data = response.data
     const hasTrailer = data.videos?.results?.some((video) =>

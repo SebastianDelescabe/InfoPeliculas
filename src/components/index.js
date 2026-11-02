@@ -1,3 +1,4 @@
+// Punto único de exportación para las pantallas reutilizadas por el router.
 import Card from "./Card/Card";
 import Detail from "./Detail/Detail";
 import Header from "./Header/Header";

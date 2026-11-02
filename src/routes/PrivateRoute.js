@@ -1,10 +1,9 @@
 import { Navigate } from "react-router-dom";
 
-const PrivateRoute = ({ children }) => { //Children son los componentes que contiene privateRoute
-
-  const token = sessionStorage.getItem('token')
-
-  return token ? children : <Navigate to='/login' />
-}
+/** Restringe las rutas privadas a una sesión activa. */
+const PrivateRoute = ({ children }) => {
+  const token = sessionStorage.getItem('token');
+  return token ? children : <Navigate to='/login' replace />;
+};
 
 export default PrivateRoute

@@ -1,86 +1,25 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { AiFillHeart, AiOutlineHeart } from 'react-icons/ai';
-import { AppContext } from '../../helpers/AppContext';
-import { notify } from '../../helpers/notify';
-import { getNowPlayingMovieIds, getWatchProviders } from '../../helpers/tmdb';
+import React, { useRef } from 'react';
+import CardContent from './CardContent';
+import CardFavoriteButton from './CardFavoriteButton';
+import CardPoster from './CardPoster';
+import useCardMetadata from './useCardMetadata';
+import useMovieFavorite from './useMovieFavorite';
 
+/** Compone una tarjeta y delega sus datos y acciones en hooks pequeños. */
 const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWatched, hideFavorite = false }) => {
-    const { setMovies, movies, favorites, setFavorites, watched } = useContext(AppContext);
-    const [heartPop, setHeartPop] = useState(false);
-    const [watchProviders, setWatchProviders] = useState(undefined);
-    const [inTheaters, setInTheaters] = useState(false);
     const cardRef = useRef(null);
-    const sourceMovies = moviesResults || movies;
+    const { watchProviders, inTheaters } = useCardMetadata(movie, cardRef);
+    const { heartPop, toggleFavorite } = useMovieFavorite(movie, moviesResults, setMoviesResults);
 
+    // Conserva la posición del listado cuando se abre una ficha desde Destacado.
     const rememberHomePosition = () => {
         if (window.location.pathname !== '/home') return;
         try {
             const savedFeed = JSON.parse(sessionStorage.getItem('home-feed-state') || '{}');
             sessionStorage.setItem('home-feed-state', JSON.stringify({ ...savedFeed, scrollY: window.scrollY }));
         } catch {
-            // Navigation should still work if session storage is unavailable.
+            // La navegación sigue funcionando si no se puede usar el almacenamiento.
         }
-    };
-
-    useEffect(() => {
-        const card = cardRef.current;
-        if (!card || movie.upcoming) return undefined;
-        let active = true;
-
-        const loadCardMetadata = () => {
-            getWatchProviders(movie.id)
-                .then((providers) => { if (active) setWatchProviders(providers); })
-                .catch(() => { if (active) setWatchProviders(null); });
-            getNowPlayingMovieIds()
-                .then((movieIds) => { if (active) setInTheaters(movieIds.has(movie.id)); })
-                .catch(() => {});
-        };
-
-        if (!('IntersectionObserver' in window)) {
-            loadCardMetadata();
-            return () => { active = false; };
-        }
-
-        const observer = new IntersectionObserver(([entry]) => {
-            if (!entry.isIntersecting) return;
-            observer.disconnect();
-            loadCardMetadata();
-        }, { rootMargin: '250px 0px' });
-
-        observer.observe(card);
-        return () => {
-            active = false;
-            observer.disconnect();
-        };
-    }, [movie.id, movie.upcoming]);
-
-    const updateFavorite = (isFavorite) => {
-        if (isFavorite && watched.some((item) => item.id === movie.id)) {
-            notify('Esta película ya está marcada como vista.', 'info');
-            return;
-        }
-        if (isFavorite) {
-            setHeartPop(true);
-            window.setTimeout(() => setHeartPop(false), 520);
-            notify(`${movie.title || movie.name || 'Película'} se agregó a Películas a mirar`, 'success');
-        }
-        const updatedMovie = { ...movie, favorite: isFavorite };
-        const updatedSource = sourceMovies.map((item) => item.id === movie.id ? updatedMovie : item);
-        if (moviesResults) {
-            setMoviesResults(updatedSource);
-            localStorage.setItem('results', JSON.stringify(updatedSource));
-        } else {
-            setMovies(updatedSource);
-            localStorage.setItem('movies', JSON.stringify(updatedSource));
-        }
-        setFavorites((current) => isFavorite
-            ? current.some((item) => item.id === movie.id) ? current : [...current, updatedMovie]
-            : current.filter((item) => item.id !== movie.id));
-        const nextFavorites = isFavorite
-            ? favorites.some((item) => item.id === movie.id) ? favorites : [...favorites, updatedMovie]
-            : favorites.filter((item) => item.id !== movie.id);
-        localStorage.setItem('favorites', JSON.stringify(nextFavorites));
     };
 
     const poster = movie.poster_path
@@ -100,43 +39,28 @@ const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWat
     return (
         <div className='col-3'>
             <article className='movie-card animate__animated animate__fadeIn' ref={cardRef}>
-                <Link className='poster-link' to={`/detail?movieID=${movie.id}`} aria-label={`Ver ${title}`} onClick={rememberHomePosition}>
-                    <img className='movie-poster' src={poster} alt={`Póster de ${title}`} loading='lazy' />
-                    {inTheaters && <span className='cinema-badge' aria-label='Actualmente en cines en Argentina'>En cines</span>}
-                    {availabilityProviders.length > 0 && <div
-                        className='provider-overlay'
-                        role='img'
-                        aria-label={`Disponible para ver en ${availabilityProviders.map((provider) => provider.provider_name).join(', ')}`}
-                    >
-                        <div className='provider-logos'>
-                            {availabilityProviders.slice(0, 4).map((provider) => <img
-                                key={provider.provider_id}
-                                src={`https://image.tmdb.org/t/p/w92${provider.logo_path}`}
-                                alt=''
-                                title={provider.provider_name}
-                                loading='lazy'
-                            />)}
-                        </div>
-                        <small className='provider-credit'>JustWatch</small>
-                    </div>}
-                </Link>
-                {!movie.upcoming && !hideFavorite && <button
-                    onClick={() => updateFavorite(!movie.favorite)}
-                    className={`fav-icon ${movie.favorite ? 'is-favorite' : ''} ${heartPop ? 'favorite-pop' : ''}`}
-                    aria-label={movie.favorite ? 'Quitar de Películas a mirar' : 'Agregar a Películas a mirar'}
-                    title={movie.favorite ? 'Quitar de Películas a mirar' : 'Agregar a Películas a mirar'}
-                >
-                    {movie.favorite ? <AiFillHeart /> : <AiOutlineHeart />}
-                </button>}
-                <div className='card-body'>
-                    <h2 className='card-title'>{title}</h2>
-                    <p className={`card-text ${movie.upcoming ? 'movie-date' : ''}`}>
-                        {movie.upcoming ? releaseDate : `${overview.slice(0, 88)}${overview.length > 88 ? '…' : ''}`}
-                    </p>
-                    {onMarkWatched && <button type='button' className='card-list-action' onClick={() => onMarkWatched(movie)}>Marcar como vista</button>}
-                    {onUndoWatched && <button type='button' className='card-list-action' onClick={() => onUndoWatched(movie)}>Desmarcar como vista</button>}
-                    <Link to={`/detail?movieID=${movie.id}`} className='btn' onClick={rememberHomePosition}>Ver detalles</Link>
-                </div>
+                <CardPoster
+                    movie={movie}
+                    title={title}
+                    poster={poster}
+                    inTheaters={inTheaters}
+                    providers={availabilityProviders}
+                    onOpen={rememberHomePosition}
+                />
+                {!movie.upcoming && !hideFavorite && <CardFavoriteButton
+                    movie={movie}
+                    heartPop={heartPop}
+                    onToggle={toggleFavorite}
+                />}
+                <CardContent
+                    movie={movie}
+                    title={title}
+                    overview={overview}
+                    releaseDate={releaseDate}
+                    onMarkWatched={onMarkWatched}
+                    onUndoWatched={onUndoWatched}
+                    onOpen={rememberHomePosition}
+                />
             </article>
         </div>
     );

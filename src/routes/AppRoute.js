@@ -7,6 +7,7 @@ import DashboardRoutes from './DashboardRoutes';
 import Toasts from '../components/Toasts/Toasts';
 import ScrollToTop from '../components/ScrollToTop/ScrollToTop';
 
+/** Define el router general y monta servicios globales de la aplicación. */
 const AppRouter = () => {
     return (
         <BrowserRouter>

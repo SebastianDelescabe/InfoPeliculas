@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch } from 'react-icons/fi';
 import { notify } from '../../helpers/notify';
 
+/** Valida y envía el término de búsqueda a la ruta de resultados. */
 const Search = () => {
     const navigate = useNavigate();
     const token = sessionStorage.getItem('token');

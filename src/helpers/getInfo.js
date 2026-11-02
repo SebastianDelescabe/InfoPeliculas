@@ -1,10 +1,12 @@
 import { getNowPlayingMoviesPage, getWatchProviders, TMDB_REGION, tmdbGet } from './tmdb';
 
+// Convierte una fecha local a AAAA-MM-DD sin desplazar el día por zona horaria.
 const localDate = (date) => {
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
     return local.toISOString().slice(0, 10);
 };
 
+// Equilibra nota y cantidad de votos para reducir el efecto de muestras pequeñas.
 const weightedRating = (movie) => {
     const votes = Number(movie.vote_count) || 0;
     const rating = Number(movie.vote_average) || 0;
@@ -14,6 +16,7 @@ const weightedRating = (movie) => {
         + ((priorVotes / (votes + priorVotes)) * priorRating);
 };
 
+/** Busca páginas de películas aplicando período, cartelera y filtros elegidos. */
 export const getInfo = async (
     page = 1,
     providerId = '',
@@ -27,6 +30,7 @@ export const getInfo = async (
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
+    // La cartelera usa el endpoint dedicado y aplica los filtros localmente.
     if (inTheatersOnly) {
         const response = await getNowPlayingMoviesPage(page);
         let movies = response.results || [];
@@ -72,6 +76,7 @@ export const getInfo = async (
         };
     }
 
+    // En el catálogo completo, los votos representan mejor la popularidad histórica.
     const params = {
         language: 'es-AR',
         region: TMDB_REGION,

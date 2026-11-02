@@ -5,6 +5,7 @@ const getLocalDate = () => {
     return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 };
 
+/** Filtra próximos estrenos argentinos y los ordena por fecha de lanzamiento. */
 export const upcoming = async () => {
     const response = await tmdbGet('/movie/upcoming', {
         language: 'es-AR',

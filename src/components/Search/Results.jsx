@@ -1,55 +1,76 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom';/* eslint-disable */
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { notify } from '../../helpers/notify';
 import { searchResults } from '../../helpers/searchResults';
-import { Card } from '../index'
+import Card from '../Card/Card';
 
+/** Lee la búsqueda de la URL, muestra resultados y sincroniza favoritos. */
 const Results = () => {
-
     const navigate = useNavigate();
-
-    // ---->>>>> MEJOR FORMA DE TRAER QUERYS PORQUE LO ACTUALIZA "EN VIVO"
-    const [searchParams, setSearchParams] = useSearchParams(); /* eslint-disable */
-    const keyword = searchParams.get("keyword");
-
+    const [searchParams] = useSearchParams();
+    const keyword = searchParams.get('keyword') || '';
     const [moviesResults, setMoviesResults] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
+    // Cancela el resultado anterior si cambia el término mientras se consulta.
     useEffect(() => {
+        let active = true;
+        let redirectTimer;
+        if (!keyword) {
+            setMoviesResults([]);
+            setLoading(false);
+            setError(false);
+            return undefined;
+        }
+
+        setMoviesResults([]);
+        setLoading(true);
+        setError(false);
         searchResults(keyword)
             .then((response) => {
+                if (!active) return;
                 if (response.length === 0) {
                     notify('No se encontraron películas para esa búsqueda', 'warning');
-                    setTimeout(() => {
-                        navigate('/home')
-                    }, 1000);
-                } else {
-                    setMoviesResults(response);
-                    localStorage.setItem('results', JSON.stringify(response))
+                    redirectTimer = window.setTimeout(() => navigate('/home'), 1000);
+                    return;
+                }
+                setMoviesResults(response);
+                try {
+                    localStorage.setItem('results', JSON.stringify(response));
+                } catch {
+                    // Los resultados siguen visibles aunque no puedan guardarse.
                 }
             })
-            .catch(error => {
-                console.log(error);
+            .catch(() => {
+                if (!active) return;
+                setError(true);
+                notify('No se pudo completar la búsqueda.', 'error');
             })
+            .finally(() => { if (active) setLoading(false); });
 
-    }, [keyword]); //va a estar atento a cambios en KeyWord
+        return () => {
+            active = false;
+            window.clearTimeout(redirectTimer);
+        };
+    }, [keyword, navigate]);
 
     return (
-        <div className='search'>
-            <h2>Resultados <em> {keyword}</em></h2>
+        <section className='search' aria-labelledby='search-heading'>
+            <h2 id='search-heading'>Resultados <em>{keyword}</em></h2>
+            {loading && <p className='loading-state'>Buscando películas…</p>}
+            {error && <p className='empty-state'>Revisá tu conexión e intentá buscar de nuevo.</p>}
+            {!loading && !error && moviesResults.length === 0 && keyword && <p className='empty-state'>No hay resultados para mostrar.</p>}
             <div className='movie-grid'>
-                {
-                    moviesResults.map((movie) => (
-                        <Card
-                            key={movie.id}
-                            movie={movie}
-                            moviesResults={moviesResults}
-                            setMoviesResults={setMoviesResults}
-                        />
-                    ))
-                }
+                {moviesResults.map((movie) => <Card
+                    key={movie.id}
+                    movie={movie}
+                    moviesResults={moviesResults}
+                    setMoviesResults={setMoviesResults}
+                />)}
             </div>
-        </div>
-    )
-}
+        </section>
+    );
+};
 
-export default Results
+export default Results;

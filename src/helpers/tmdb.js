@@ -8,6 +8,7 @@ const apiKey = configuredKey.startsWith('api_key=')
 const client = axios.create({ baseURL: 'https://api.themoviedb.org/3' });
 export const TMDB_REGION = 'AR';
 
+// Centraliza las consultas para compartir clave, región y cliente HTTP.
 export const tmdbGet = (path, params = {}) => client.get(path, {
     params: { api_key: apiKey, ...params }
 });
@@ -32,23 +33,33 @@ const normalizeProviderName = (name) => name
     .replace(/[^a-z0-9]/g, '');
 const freeOrAdSupportedProviders = new Set(['mercadoplay']);
 
+/** Devuelve servicios de una película y reutiliza respuestas recientes. */
 export const getWatchProviders = async (movieId) => {
-    if (watchProviderCache.has(movieId)) return watchProviderCache.get(movieId);
+    const cacheKey = String(movieId);
+    if (watchProviderCache.has(cacheKey)) {
+        const cachedRequest = watchProviderCache.get(cacheKey);
+        watchProviderCache.delete(cacheKey);
+        watchProviderCache.set(cacheKey, cachedRequest);
+        return cachedRequest;
+    }
 
     const request = tmdbGet(`/movie/${movieId}/watch/providers`)
         .then((response) => response.data.results?.[TMDB_REGION] || null);
-    watchProviderCache.set(movieId, request);
+    watchProviderCache.set(cacheKey, request);
+    // Limita el caché para evitar acumular datos durante el scroll infinito.
+    if (watchProviderCache.size > 500) watchProviderCache.delete(watchProviderCache.keys().next().value);
 
     try {
         const providers = await request;
-        watchProviderCache.set(movieId, providers);
+        watchProviderCache.set(cacheKey, providers);
         return providers;
     } catch (error) {
-        watchProviderCache.delete(movieId);
+        watchProviderCache.delete(cacheKey);
         throw error;
     }
 };
 
+/** Filtra y ordena las plataformas populares disponibles para Argentina. */
 export const getStreamingProviders = async () => {
     if (!streamingProviderListRequest) {
         streamingProviderListRequest = tmdbGet('/watch/providers/movie', {
@@ -74,6 +85,7 @@ export const getStreamingProviders = async () => {
     }
 };
 
+/** Devuelve géneros comunes con los nombres localizados de TMDB. */
 export const getCommonMovieGenres = async () => {
     if (!movieGenreListRequest) {
         movieGenreListRequest = tmdbGet('/genre/movie/list', { language: 'es-AR' })
@@ -91,6 +103,7 @@ export const getCommonMovieGenres = async () => {
     }
 };
 
+/** Consulta y guarda temporalmente una página de películas en cartelera. */
 export const getNowPlayingMoviesPage = async (page = 1) => {
     if (!nowPlayingPageCache.has(page)) {
         nowPlayingPageCache.set(page, tmdbGet('/movie/now_playing', {
@@ -106,6 +119,7 @@ export const getNowPlayingMoviesPage = async (page = 1) => {
     return nowPlayingPageCache.get(page);
 };
 
+/** Reúne IDs de cartelera para marcar tarjetas sin repetir consultas. */
 export const getNowPlayingMovieIds = async () => {
     if (!nowPlayingMovieIdsRequest) {
         nowPlayingMovieIdsRequest = getNowPlayingMoviesPage(1)

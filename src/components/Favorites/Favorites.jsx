@@ -1,10 +1,12 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../../helpers/AppContext';
-import Card from '../Card/Card.jsx';
+import Card from '../Card/Card';
 
+/** Organiza las listas persistentes de películas para mirar y ya vistas. */
 const Favorites = () => {
     const { favorites, setFavorites, watched, setWatched } = useContext(AppContext);
 
+    // Mueve una película de la lista pendiente a la lista de vistas.
     const markAsWatched = (movie) => {
         setFavorites((current) => current.filter((item) => item.id !== movie.id));
         localStorage.setItem('favorites', JSON.stringify(favorites.filter((item) => item.id !== movie.id)));
@@ -13,6 +15,7 @@ const Favorites = () => {
             : [...current, { ...movie, favorite: false }]);
     };
 
+    // Revierte una marca accidental y recupera la película pendiente.
     const undoWatched = (movie) => {
         setWatched((current) => current.filter((item) => item.id !== movie.id));
         setFavorites((current) => current.some((item) => item.id === movie.id)

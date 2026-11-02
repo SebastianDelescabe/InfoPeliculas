@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiArrowUp } from 'react-icons/fi';
 
+/** Muestra un acceso flotante para volver al inicio tras desplazarse. */
 const ScrollToTop = () => {
     const [visible, setVisible] = useState(false);
 
