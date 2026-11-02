@@ -1,4 +1,4 @@
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AppContext } from '../../helpers/AppContext';
 import { getInfo } from '../../helpers/getInfo';
 import { notify } from '../../helpers/notify';
@@ -142,27 +142,27 @@ const useHomeFeed = () => {
     }, [error, hasMore, loading]);
 
     // Reinicia el feed y vuelve al inicio para que el cambio de filtro sea visible.
-    const resetResults = () => {
+    const resetResults = useCallback(() => {
         setPage(1);
         setMovies([]);
         setHasMore(true);
         setError(false);
         window.scrollTo(0, 0);
-    };
+    }, []);
 
-    const changeFilter = (setter, value) => {
+    const changeFilter = useCallback((setter, value) => {
         setter(value);
         resetResults();
-    };
+    }, [resetResults]);
 
-    const toggleGenre = (genreId) => {
+    const toggleGenre = useCallback((genreId) => {
         setSelectedGenres((current) => current.includes(String(genreId))
             ? current.filter((id) => id !== String(genreId))
             : [...current, String(genreId)]);
         resetResults();
-    };
+    }, [resetResults]);
 
-    const clearFilters = () => {
+    const clearFilters = useCallback(() => {
         setSelectedProvider('');
         setSelectedGenres([]);
         setSelectedSort('popularity.desc');
@@ -170,14 +170,20 @@ const useHomeFeed = () => {
         setInTheatersOnly(false);
         if (genreFilterRef.current) genreFilterRef.current.open = false;
         resetResults();
-    };
+    }, [resetResults]);
+
+    const retry = useCallback(() => setRetryCount((count) => count + 1), []);
+    const updateProvider = useCallback((value) => changeFilter(setSelectedProvider, value), [changeFilter]);
+    const updateSort = useCallback((value) => changeFilter(setSelectedSort, value), [changeFilter]);
+    const updateReleaseRange = useCallback((value) => changeFilter(setReleaseRange, value), [changeFilter]);
+    const updateTheaterFilter = useCallback((value) => changeFilter(setInTheatersOnly, value), [changeFilter]);
 
     return {
-        movies, setMovies, loading, hasMore, error, retry: () => setRetryCount((count) => count + 1),
-        selectedProvider, setSelectedProvider: (value) => changeFilter(setSelectedProvider, value),
-        selectedSort, setSelectedSort: (value) => changeFilter(setSelectedSort, value),
-        releaseRange, setReleaseRange: (value) => changeFilter(setReleaseRange, value),
-        inTheatersOnly, setInTheatersOnly: (value) => changeFilter(setInTheatersOnly, value),
+        movies, setMovies, loading, hasMore, error, retry,
+        selectedProvider, setSelectedProvider: updateProvider,
+        selectedSort, setSelectedSort: updateSort,
+        releaseRange, setReleaseRange: updateReleaseRange,
+        inTheatersOnly, setInTheatersOnly: updateTheaterFilter,
         selectedGenres, genres, genresLoading, genreFilterRef, toggleGenre,
         providers, providersLoading, clearFilters, sentinelRef
     };

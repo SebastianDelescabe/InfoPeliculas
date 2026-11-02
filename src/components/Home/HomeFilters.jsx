@@ -1,6 +1,6 @@
 import React from 'react';
 
-/** Panel lateral con filtros de período, orden, género y cartelera. */
+/** Panel lateral con los filtros de período, orden y género de Descubrir. */
 const HomeFilters = ({
     releaseRange,
     setReleaseRange,
@@ -12,7 +12,6 @@ const HomeFilters = ({
     genreFilterRef,
     toggleGenre,
     inTheatersOnly,
-    setInTheatersOnly,
     selectedProvider,
     clearFilters
 }) => (
@@ -51,14 +50,6 @@ const HomeFilters = ({
                 </div>
             </details>
         </div>
-        <label className='home-cinema-checkbox'>
-            <input
-                type='checkbox'
-                checked={inTheatersOnly}
-                onChange={(event) => setInTheatersOnly(event.target.checked)}
-            />
-            <span><strong>En cartelera Argentina</strong></span>
-        </label>
         <button
             type='button'
             className='clear-filters-button'

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import HomeFilters from './HomeFilters';
 import HomeResults from './HomeResults';
 import useHomeFeed from './useHomeFeed';
@@ -7,7 +7,24 @@ import useHomeFeed from './useHomeFeed';
 /** Une el panel de filtros con el feed de películas destacadas. */
 const Home = () => {
     const token = sessionStorage.getItem('token');
+    const [searchParams, setSearchParams] = useSearchParams();
     const feed = useHomeFeed();
+    const { inTheatersOnly, setInTheatersOnly } = feed;
+
+    // El nav controla el modo de cartelera sin duplicar ese control en el panel.
+    useEffect(() => {
+        const shouldShowTheaters = searchParams.get('scope') === 'theaters';
+        if (inTheatersOnly !== shouldShowTheaters) setInTheatersOnly(shouldShowTheaters);
+    }, [inTheatersOnly, searchParams, setInTheatersOnly]);
+
+    const clearFilters = () => {
+        feed.clearFilters();
+        if (searchParams.has('scope')) {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete('scope');
+            setSearchParams(nextParams, { replace: true });
+        }
+    };
 
     if (!token) return <Navigate to='/' replace />;
 
@@ -24,9 +41,8 @@ const Home = () => {
                 genreFilterRef={feed.genreFilterRef}
                 toggleGenre={feed.toggleGenre}
                 inTheatersOnly={feed.inTheatersOnly}
-                setInTheatersOnly={feed.setInTheatersOnly}
                 selectedProvider={feed.selectedProvider}
-                clearFilters={feed.clearFilters}
+                clearFilters={clearFilters}
             />
             <HomeResults
                 releaseRange={feed.releaseRange}
