@@ -6,7 +6,8 @@ import {
     Detail,
     Home,
     Favorites,
-    Upcoming
+    Upcoming,
+    MovieQuiz
 } from '../components';
 
 
@@ -20,6 +21,7 @@ const DashboardRoutes = () => {
             <Routes>
                 <Route path="/home" element={<Home />} />
                 <Route path="favorites" element={<Favorites />} />
+                <Route path="quiz" element={<MovieQuiz />} />
                 <Route path="results" element={<Results />} />
                 <Route path="detail" element={<Detail />} />
                 <Route path="upcoming" element={<Upcoming />} />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FiBookmark, FiCalendar, FiCompass, FiMonitor } from 'react-icons/fi';
+import { FiBookmark, FiCalendar, FiCompass, FiMonitor, FiZap } from 'react-icons/fi';
 import Search from '../Search/Search';
 
 /** Navegación principal con accesos a descubrir, cartelera, próximos y mi lista. */
@@ -41,6 +41,11 @@ const Header = () => {
                     <li className='nav-item'>
                         <Link className={`nav-link ${location.pathname === '/favorites' ? 'active' : ''}`} to='/favorites' aria-current={location.pathname === '/favorites' ? 'page' : undefined}>
                             <FiBookmark aria-hidden='true' /><span>Mi lista</span>
+                        </Link>
+                    </li>
+                    <li className='nav-item'>
+                        <Link className={`nav-link nav-link-quiz ${location.pathname === '/quiz' ? 'active' : ''}`} to='/quiz' aria-current={location.pathname === '/quiz' ? 'page' : undefined}>
+                            <FiZap aria-hidden='true' /><span>Encontrar peli</span>
                         </Link>
                     </li>
                 </ul>

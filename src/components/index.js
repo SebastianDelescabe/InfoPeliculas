@@ -8,6 +8,7 @@ import Results from "./Search/Results";
 import Home from "./Home/Home";
 import Favorites from "./Favorites/Favorites";
 import Upcoming from "./upcoming/Upcoming";
+import MovieQuiz from "./MovieQuiz/MovieQuiz";
 
 export {
     Card,
@@ -18,5 +19,6 @@ export {
     Results,
     Home,
     Favorites,
-    Upcoming
+    Upcoming,
+    MovieQuiz
 }
