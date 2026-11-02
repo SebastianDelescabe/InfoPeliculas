@@ -5,12 +5,37 @@ const localDate = (date) => {
     return local.toISOString().slice(0, 10);
 };
 
-export const getInfo = async (page = 1, providerId = '', monetizationType = 'flatrate', genreIds = [], sortBy = 'popularity.desc') => {
-    const today = new Date();
+const weightedRating = (movie) => {
+    const votes = Number(movie.vote_count) || 0;
+    const rating = Number(movie.vote_average) || 0;
+    const priorRating = 6.5;
+    const priorVotes = 500;
+    return ((votes / (votes + priorVotes)) * rating)
+        + ((priorVotes / (votes + priorVotes)) * priorRating);
+};
 
-    if (sortBy === 'now_playing') {
+export const getInfo = async (
+    page = 1,
+    providerId = '',
+    monetizationType = 'flatrate',
+    genreIds = [],
+    sortBy = 'popularity.desc',
+    releaseRange = 'last_year',
+    inTheatersOnly = false
+) => {
+    const today = new Date();
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    if (inTheatersOnly) {
         const response = await getNowPlayingMoviesPage(page);
         let movies = response.results || [];
+
+        if (releaseRange === 'last_year') {
+            const minDate = localDate(oneYearAgo);
+            const maxDate = localDate(today);
+            movies = movies.filter((movie) => movie.release_date && movie.release_date >= minDate && movie.release_date <= maxDate);
+        }
 
         if (genreIds.length) {
             const selectedGenreIds = genreIds.map(Number);
@@ -31,36 +56,40 @@ export const getInfo = async (page = 1, providerId = '', monetizationType = 'fla
         }
 
         return {
-            movies: movies.map((movie) => ({
-                id: movie.id,
-                poster_path: movie.poster_path,
-                title: movie.title,
-                overview: movie.overview,
-                release_date: movie.release_date,
-                favorite: false
-            })),
+            movies: movies
+                .sort((first, second) => sortBy === 'vote_average.desc'
+                    ? weightedRating(second) - weightedRating(first)
+                    : 0)
+                .map((movie) => ({
+                    id: movie.id,
+                    poster_path: movie.poster_path,
+                    title: movie.title,
+                    overview: movie.overview,
+                    release_date: movie.release_date,
+                    favorite: false
+                })),
             totalPages: response.total_pages || 1
         };
     }
 
-    const oneYearAgo = new Date(today);
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
     const params = {
         language: 'es-AR',
         region: TMDB_REGION,
-        sort_by: sortBy,
-        'primary_release_date.gte': localDate(oneYearAgo),
+        sort_by: sortBy === 'vote_average.desc'
+            ? 'vote_count.desc'
+            : releaseRange === 'all' && sortBy === 'popularity.desc'
+                ? 'vote_count.desc'
+                : sortBy,
         'primary_release_date.lte': localDate(today),
         include_adult: false,
         include_video: false,
         page
     };
 
-    if (sortBy === 'vote_average.desc') {
-        params['vote_count.gte'] = 2000;
-        params['vote_average.gte'] = 6.5;
+    if (releaseRange === 'last_year') {
+        params['primary_release_date.gte'] = localDate(oneYearAgo);
     }
+
     if (providerId) {
         params.watch_region = TMDB_REGION;
         params.with_watch_monetization_types = monetizationType;
@@ -73,6 +102,9 @@ export const getInfo = async (page = 1, providerId = '', monetizationType = 'fla
     return {
         movies: response.data.results
             .filter((movie) => movie.release_date && movie.release_date <= localDate(today))
+            .sort((first, second) => sortBy === 'vote_average.desc'
+                ? weightedRating(second) - weightedRating(first)
+                : 0)
             .map((movie) => ({
                 id: movie.id,
                 poster_path: movie.poster_path,

@@ -12,7 +12,7 @@ const readSavedFeed = () => {
     try {
         const savedFeed = sessionStorage.getItem(HOME_FEED_STORAGE_KEY);
         const parsedFeed = savedFeed ? JSON.parse(savedFeed) : null;
-        return parsedFeed?.feedVersion === 5 ? parsedFeed : null;
+        return parsedFeed?.feedVersion === 9 ? parsedFeed : null;
     } catch {
         return null;
     }
@@ -33,6 +33,8 @@ const Home = () => {
     const [error, setError] = useState(false);
     const [selectedProvider, setSelectedProvider] = useState(savedFeed?.selectedProvider || '');
     const [selectedSort, setSelectedSort] = useState(savedFeed?.selectedSort || 'popularity.desc');
+    const [releaseRange, setReleaseRange] = useState(savedFeed?.releaseRange || 'last_year');
+    const [inTheatersOnly, setInTheatersOnly] = useState(savedFeed?.inTheatersOnly || false);
     const [selectedGenres, setSelectedGenres] = useState(() => {
         if (Array.isArray(savedFeed?.selectedGenres)) return savedFeed.selectedGenres;
         return savedFeed?.selectedGenre ? [String(savedFeed.selectedGenre)] : [];
@@ -74,7 +76,7 @@ const Home = () => {
         setLoading(true);
         setError(false);
 
-        getInfo(page, selectedProvider, selectedMonetizationType, selectedGenres, selectedSort)
+        getInfo(page, selectedProvider, selectedMonetizationType, selectedGenres, selectedSort, releaseRange, inTheatersOnly)
             .then((response) => {
                 if (!active) return;
                 const favoriteIds = new Set(favoritesRef.current.map((movie) => movie.id));
@@ -93,7 +95,7 @@ const Home = () => {
             .catch(() => {
                 if (!active) return;
                 setError(true);
-                notify('No se pudieron cargar los estrenos. Podés intentar de nuevo.', 'error');
+                notify('No se pudieron cargar las películas. Podés intentar de nuevo.', 'error');
             })
             .finally(() => {
                 if (!active) return;
@@ -102,17 +104,19 @@ const Home = () => {
             });
 
         return () => { active = false; };
-    }, [page, retryCount, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
+    }, [inTheatersOnly, page, releaseRange, retryCount, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
 
     useEffect(() => {
         try {
             sessionStorage.setItem(HOME_FEED_STORAGE_KEY, JSON.stringify({
-                feedVersion: 5,
+                feedVersion: 9,
                 movies,
                 page,
                 hasMore,
                 selectedProvider,
                 selectedSort,
+                releaseRange,
+                inTheatersOnly,
                 selectedGenres,
                 monetizationType: selectedMonetizationType,
                 scrollY: savedFeed?.scrollY || 0
@@ -120,7 +124,7 @@ const Home = () => {
         } catch {
             // Keep browsing if the session storage quota is unavailable.
         }
-    }, [hasMore, movies, page, savedFeed, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
+    }, [hasMore, inTheatersOnly, movies, page, releaseRange, savedFeed, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
 
     useEffect(() => {
         const sentinel = sentinelRef.current;
@@ -141,6 +145,7 @@ const Home = () => {
         setMovies([]);
         setHasMore(true);
         setError(false);
+        window.scrollTo(0, 0);
     };
 
     const toggleGenre = (genreId) => {
@@ -154,6 +159,8 @@ const Home = () => {
         setSelectedProvider('');
         setSelectedGenres([]);
         setSelectedSort('popularity.desc');
+        setReleaseRange('last_year');
+        setInTheatersOnly(false);
         if (genreFilterRef.current) genreFilterRef.current.open = false;
         resetResults();
     };
@@ -162,27 +169,21 @@ const Home = () => {
 
     return (
         <>
-            <div className='section-toolbar'>
-                <div>
-                    <h1 className='page-heading'>{selectedSort === 'now_playing' ? <>Películas <span>en cines</span></> : <>Últimos <span>estrenos</span></>}</h1>
-                    <p className='section-subtitle'>{selectedSort === 'now_playing'
-                        ? 'Películas actualmente en cartelera en Argentina.'
-                        : 'Estrenos en Argentina del último año. Ordenalos por popularidad o puntaje.'}</p>
-                </div>
-                <div className='home-filters'>
-                    <label className='provider-filter' htmlFor='provider-filter'>
-                        <span>Plataforma</span>
-                        <select id='provider-filter' value={selectedProvider} onChange={(event) => { setSelectedProvider(event.target.value); resetResults(); }} disabled={providersLoading}>
-                            <option value=''>{providersLoading ? 'Cargando plataformas…' : 'Todas las plataformas'}</option>
-                            {providers.map((provider) => <option key={provider.provider_id} value={provider.provider_id}>{provider.provider_name}</option>)}
+            <div className='home-layout'>
+                <aside className='home-filter-panel' aria-labelledby='home-filter-heading'>
+                    <h2 id='home-filter-heading'>Filtros</h2>
+                    <label className='provider-filter' htmlFor='release-range-filter'>
+                        <span>Período</span>
+                        <select id='release-range-filter' value={releaseRange} onChange={(event) => { setReleaseRange(event.target.value); resetResults(); }}>
+                            <option value='last_year'>Último año</option>
+                            <option value='all'>Todas las películas</option>
                         </select>
                     </label>
                     <label className='provider-filter' htmlFor='sort-filter'>
                         <span>Ordenar por</span>
                         <select id='sort-filter' value={selectedSort} onChange={(event) => { setSelectedSort(event.target.value); resetResults(); }}>
-                            <option value='popularity.desc'>Popularidad</option>
-                            <option value='vote_average.desc'>Mejor puntaje</option>
-                            <option value='now_playing'>En cines (Argentina)</option>
+                            <option value='popularity.desc'>{releaseRange === 'all' ? 'Más conocidas' : 'Popularidad'}</option>
+                            <option value='vote_average.desc'>Mejor puntuación ponderada</option>
                         </select>
                     </label>
                     <div className='provider-filter genre-multi-filter'>
@@ -204,14 +205,45 @@ const Home = () => {
                             </div>
                         </details>
                     </div>
+                    <label className='home-cinema-checkbox'>
+                        <input
+                            type='checkbox'
+                            checked={inTheatersOnly}
+                            onChange={(event) => { setInTheatersOnly(event.target.checked); resetResults(); }}
+                        />
+                        <span>
+                            <strong>En cartelera Argentina</strong>
+                        </span>
+                    </label>
                     <button
                         type='button'
                         className='clear-filters-button'
                         onClick={clearFilters}
-                        disabled={!selectedProvider && selectedGenres.length === 0 && selectedSort === 'popularity.desc'}
+                        disabled={!selectedProvider && selectedGenres.length === 0 && selectedSort === 'popularity.desc' && releaseRange === 'last_year' && !inTheatersOnly}
                     >
                         Limpiar filtros
                     </button>
+                </aside>
+                <div className='home-results'>
+            <div className='section-toolbar'>
+                <div>
+                    <h1 className='page-heading'>{inTheatersOnly
+                        ? <>Películas <span>en cines</span></>
+                        : releaseRange === 'all' ? <>Todas las <span>películas</span></> : <>Últimos <span>estrenos</span></>}</h1>
+                    <p className='section-subtitle'>{inTheatersOnly
+                        ? 'Películas actualmente en cartelera en Argentina.'
+                        : releaseRange === 'all'
+                            ? 'Películas estrenadas en Argentina, ordenadas por popularidad o puntaje.'
+                            : 'Estrenos en Argentina del último año, ordenados por popularidad o puntaje.'}</p>
+                </div>
+                <div className='home-filters'>
+                    <label className='provider-filter' htmlFor='provider-filter'>
+                        <span>Plataforma</span>
+                        <select id='provider-filter' value={selectedProvider} onChange={(event) => { setSelectedProvider(event.target.value); resetResults(); }} disabled={providersLoading}>
+                            <option value=''>{providersLoading ? 'Cargando plataformas…' : 'Todas las plataformas'}</option>
+                            {providers.map((provider) => <option key={provider.provider_id} value={provider.provider_id}>{provider.provider_name}</option>)}
+                        </select>
+                    </label>
                 </div>
             </div>
             <div className='movie-grid'>
@@ -224,11 +256,13 @@ const Home = () => {
                     />
                 ))}
             </div>
-            {loading && <p className='loading-state'>Cargando más estrenos…</p>}
+            {loading && <p className='loading-state'>Cargando más películas…</p>}
             {error && <button className='btn' onClick={() => setRetryCount((count) => count + 1)}>Reintentar</button>}
-            {!loading && !error && movies.length === 0 && <p className='empty-state'>No hay estrenos recientes para mostrar.</p>}
+            {!loading && !error && movies.length === 0 && <p className='empty-state'>No hay películas para mostrar con estos filtros.</p>}
             {!hasMore && movies.length > 0 && <p className='empty-state'>Llegaste al final de las películas disponibles con estos filtros.</p>}
             <div ref={sentinelRef} className='scroll-sentinel' aria-hidden='true' />
+                </div>
+            </div>
         </>
     );
 };

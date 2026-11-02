@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import {
     Results,
@@ -11,8 +11,11 @@ import {
 
 
 const DashboardRoutes = () => {
+    const location = useLocation();
+    const isHome = location.pathname === '/home';
+
     return (
-        <main className="page-container">
+        <main className={`page-container${isHome ? ' home-page-container' : ''}`}>
             <Routes>
                 <Route path="/home" element={<Home />} />
                 <Route path="favorites" element={<Favorites />} />
