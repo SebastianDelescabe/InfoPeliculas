@@ -15,6 +15,8 @@ export const tmdbGet = (path, params = {}) => client.get(path, {
 const watchProviderCache = new Map();
 let streamingProviderListRequest;
 let movieGenreListRequest;
+let nowPlayingMovieIdsRequest;
+const nowPlayingPageCache = new Map();
 const commonMovieGenreIds = [28, 12, 16, 35, 80, 18, 14, 9648, 10749, 878, 53, 27];
 const popularProviderNames = new Set([
     'mubi', 'netflix', 'amazonprimevideo', 'primevideo', 'hbomax', 'hbo', 'max',
@@ -85,6 +87,45 @@ export const getCommonMovieGenres = async () => {
         return await movieGenreListRequest;
     } catch (error) {
         movieGenreListRequest = undefined;
+        throw error;
+    }
+};
+
+export const getNowPlayingMoviesPage = async (page = 1) => {
+    if (!nowPlayingPageCache.has(page)) {
+        nowPlayingPageCache.set(page, tmdbGet('/movie/now_playing', {
+            language: 'es-AR',
+            region: TMDB_REGION,
+            page
+        }).then((response) => response.data).catch((error) => {
+            nowPlayingPageCache.delete(page);
+            throw error;
+        }));
+    }
+
+    return nowPlayingPageCache.get(page);
+};
+
+export const getNowPlayingMovieIds = async () => {
+    if (!nowPlayingMovieIdsRequest) {
+        nowPlayingMovieIdsRequest = getNowPlayingMoviesPage(1)
+            .then(async (firstPage) => {
+                const lastPage = Math.min(firstPage.total_pages || 1, 10);
+                const remainingPages = await Promise.all(Array.from({ length: lastPage - 1 }, (_, index) =>
+                    getNowPlayingMoviesPage(index + 2)
+                ));
+                const movies = [
+                    ...(firstPage.results || []),
+                    ...remainingPages.flatMap((page) => page.results || [])
+                ];
+                return new Set(movies.map((movie) => movie.id));
+            });
+    }
+
+    try {
+        return await nowPlayingMovieIdsRequest;
+    } catch (error) {
+        nowPlayingMovieIdsRequest = undefined;
         throw error;
     }
 };

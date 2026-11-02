@@ -5,6 +5,7 @@ import PublicRoute from './PublicRoute';
 import PrivateRoute from './PrivateRoute';
 import DashboardRoutes from './DashboardRoutes';
 import Toasts from '../components/Toasts/Toasts';
+import ScrollToTop from '../components/ScrollToTop/ScrollToTop';
 
 const AppRouter = () => {
     return (
@@ -27,6 +28,7 @@ const AppRouter = () => {
                         }
                     />
                 </Routes>
+                <ScrollToTop />
                 <Toasts />
             </div>
         </BrowserRouter>

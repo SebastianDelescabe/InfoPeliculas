@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { AiFillStar } from 'react-icons/ai';
 import { getInfoById } from '../../helpers/getInfoById';
-import { getWatchProviders } from '../../helpers/tmdb';
+import { getNowPlayingMovieIds, getWatchProviders } from '../../helpers/tmdb';
 
 const Detail = () => {
   const token = sessionStorage.getItem('token');
@@ -11,6 +11,11 @@ const Detail = () => {
   const [movieData, setMovieData] = useState(null);
   const [watchProviders, setWatchProviders] = useState(undefined);
   const [providersError, setProvidersError] = useState(false);
+  const [inTheaters, setInTheaters] = useState(false);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [movieID]);
 
   useEffect(() => {
     if (movieID) getInfoById(movieID).then(setMovieData).catch(() => setMovieData(null));
@@ -18,12 +23,21 @@ const Detail = () => {
 
   useEffect(() => {
     setWatchProviders(undefined);
+    setInTheaters(false);
     setProvidersError(false);
     if (movieID) {
       getWatchProviders(movieID)
         .then(setWatchProviders)
         .catch(() => setProvidersError(true));
     }
+  }, [movieID]);
+
+  useEffect(() => {
+    let active = true;
+    getNowPlayingMovieIds()
+      .then((movieIds) => { if (active) setInTheaters(movieIds.has(Number(movieID))); })
+      .catch(() => {});
+    return () => { active = false; };
   }, [movieID]);
 
   if (!token) return <Navigate to='/login' replace />;
@@ -55,7 +69,10 @@ const Detail = () => {
   return (
     <div className='detail-page animate__animated animate__fadeIn'>
       <section className='detail-layout'>
-        <img src={poster} className='detail-poster' alt={`Póster de ${movieData.title}`} />
+        <div className='detail-poster-wrap'>
+          <img src={poster} className='detail-poster' alt={`Póster de ${movieData.title}`} />
+          {inTheaters && <span className='cinema-badge' aria-label='Actualmente en cines en Argentina'>En cines</span>}
+        </div>
         <div className='detail-copy'>
           <h1>{movieData.title}</h1>
           {movieData.tagline && <p className='detail-tagline'>{movieData.tagline}</p>}

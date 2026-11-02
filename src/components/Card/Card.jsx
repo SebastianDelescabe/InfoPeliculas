@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { AiFillHeart, AiOutlineHeart } from 'react-icons/ai';
 import { AppContext } from '../../helpers/AppContext';
 import { notify } from '../../helpers/notify';
-import { getWatchProviders } from '../../helpers/tmdb';
+import { getNowPlayingMovieIds, getWatchProviders } from '../../helpers/tmdb';
 
 const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWatched, hideFavorite = false }) => {
     const { setMovies, movies, favorites, setFavorites, watched } = useContext(AppContext);
     const [heartPop, setHeartPop] = useState(false);
     const [watchProviders, setWatchProviders] = useState(undefined);
+    const [inTheaters, setInTheaters] = useState(false);
     const cardRef = useRef(null);
     const sourceMovies = moviesResults || movies;
 
@@ -25,24 +26,33 @@ const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWat
     useEffect(() => {
         const card = cardRef.current;
         if (!card || movie.upcoming) return undefined;
+        let active = true;
 
-        const loadProviders = () => getWatchProviders(movie.id)
-            .then(setWatchProviders)
-            .catch(() => setWatchProviders(null));
+        const loadCardMetadata = () => {
+            getWatchProviders(movie.id)
+                .then((providers) => { if (active) setWatchProviders(providers); })
+                .catch(() => { if (active) setWatchProviders(null); });
+            getNowPlayingMovieIds()
+                .then((movieIds) => { if (active) setInTheaters(movieIds.has(movie.id)); })
+                .catch(() => {});
+        };
 
         if (!('IntersectionObserver' in window)) {
-            loadProviders();
-            return undefined;
+            loadCardMetadata();
+            return () => { active = false; };
         }
 
         const observer = new IntersectionObserver(([entry]) => {
             if (!entry.isIntersecting) return;
             observer.disconnect();
-            loadProviders();
+            loadCardMetadata();
         }, { rootMargin: '250px 0px' });
 
         observer.observe(card);
-        return () => observer.disconnect();
+        return () => {
+            active = false;
+            observer.disconnect();
+        };
     }, [movie.id, movie.upcoming]);
 
     const updateFavorite = (isFavorite) => {
@@ -92,6 +102,7 @@ const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWat
             <article className='movie-card animate__animated animate__fadeIn' ref={cardRef}>
                 <Link className='poster-link' to={`/detail?movieID=${movie.id}`} aria-label={`Ver ${title}`} onClick={rememberHomePosition}>
                     <img className='movie-poster' src={poster} alt={`Póster de ${title}`} loading='lazy' />
+                    {inTheaters && <span className='cinema-badge' aria-label='Actualmente en cines en Argentina'>En cines</span>}
                     {availabilityProviders.length > 0 && <div
                         className='provider-overlay'
                         role='img'

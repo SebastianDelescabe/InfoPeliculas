@@ -11,7 +11,8 @@ const HOME_FEED_STORAGE_KEY = 'home-feed-state';
 const readSavedFeed = () => {
     try {
         const savedFeed = sessionStorage.getItem(HOME_FEED_STORAGE_KEY);
-        return savedFeed ? JSON.parse(savedFeed) : null;
+        const parsedFeed = savedFeed ? JSON.parse(savedFeed) : null;
+        return parsedFeed?.feedVersion === 5 ? parsedFeed : null;
     } catch {
         return null;
     }
@@ -22,6 +23,7 @@ const Home = () => {
     const { favorites } = useContext(AppContext);
     const favoritesRef = useRef(favorites);
     const sentinelRef = useRef(null);
+    const genreFilterRef = useRef(null);
     const loadingRef = useRef(false);
     const [savedFeed] = useState(readSavedFeed);
     const [movies, setMovies] = useState(savedFeed?.movies || []);
@@ -30,7 +32,11 @@ const Home = () => {
     const [hasMore, setHasMore] = useState(savedFeed?.hasMore ?? true);
     const [error, setError] = useState(false);
     const [selectedProvider, setSelectedProvider] = useState(savedFeed?.selectedProvider || '');
-    const [selectedGenre, setSelectedGenre] = useState(savedFeed?.selectedGenre || '');
+    const [selectedSort, setSelectedSort] = useState(savedFeed?.selectedSort || 'popularity.desc');
+    const [selectedGenres, setSelectedGenres] = useState(() => {
+        if (Array.isArray(savedFeed?.selectedGenres)) return savedFeed.selectedGenres;
+        return savedFeed?.selectedGenre ? [String(savedFeed.selectedGenre)] : [];
+    });
     const [providers, setProviders] = useState([]);
     const [genres, setGenres] = useState([]);
     const [providersLoading, setProvidersLoading] = useState(true);
@@ -68,7 +74,7 @@ const Home = () => {
         setLoading(true);
         setError(false);
 
-        getInfo(page, selectedProvider, selectedMonetizationType, selectedGenre)
+        getInfo(page, selectedProvider, selectedMonetizationType, selectedGenres, selectedSort)
             .then((response) => {
                 if (!active) return;
                 const favoriteIds = new Set(favoritesRef.current.map((movie) => movie.id));
@@ -96,23 +102,25 @@ const Home = () => {
             });
 
         return () => { active = false; };
-    }, [page, retryCount, selectedGenre, selectedMonetizationType, selectedProvider]);
+    }, [page, retryCount, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
 
     useEffect(() => {
         try {
             sessionStorage.setItem(HOME_FEED_STORAGE_KEY, JSON.stringify({
+                feedVersion: 5,
                 movies,
                 page,
                 hasMore,
                 selectedProvider,
-                selectedGenre,
+                selectedSort,
+                selectedGenres,
                 monetizationType: selectedMonetizationType,
                 scrollY: savedFeed?.scrollY || 0
             }));
         } catch {
             // Keep browsing if the session storage quota is unavailable.
         }
-    }, [hasMore, movies, page, savedFeed, selectedGenre, selectedProvider]);
+    }, [hasMore, movies, page, savedFeed, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
 
     useEffect(() => {
         const sentinel = sentinelRef.current;
@@ -128,12 +136,26 @@ const Home = () => {
         return () => observer.disconnect();
     }, [error, hasMore, loading]);
 
-    const handleFilterChange = (event, setFilter) => {
-        setFilter(event.target.value);
+    const resetResults = () => {
         setPage(1);
         setMovies([]);
         setHasMore(true);
         setError(false);
+    };
+
+    const toggleGenre = (genreId) => {
+        setSelectedGenres((current) => current.includes(String(genreId))
+            ? current.filter((id) => id !== String(genreId))
+            : [...current, String(genreId)]);
+        resetResults();
+    };
+
+    const clearFilters = () => {
+        setSelectedProvider('');
+        setSelectedGenres([]);
+        setSelectedSort('popularity.desc');
+        if (genreFilterRef.current) genreFilterRef.current.open = false;
+        resetResults();
     };
 
     if (!token) return <Navigate to='/' replace />;
@@ -142,24 +164,54 @@ const Home = () => {
         <>
             <div className='section-toolbar'>
                 <div>
-                    <h1 className='page-heading'>Últimos <span>estrenos</span></h1>
-                    <p className='section-subtitle'>Estrenos en Argentina del último año, ordenados por popularidad.</p>
+                    <h1 className='page-heading'>{selectedSort === 'now_playing' ? <>Películas <span>en cines</span></> : <>Últimos <span>estrenos</span></>}</h1>
+                    <p className='section-subtitle'>{selectedSort === 'now_playing'
+                        ? 'Películas actualmente en cartelera en Argentina.'
+                        : 'Estrenos en Argentina del último año. Ordenalos por popularidad o puntaje.'}</p>
                 </div>
                 <div className='home-filters'>
                     <label className='provider-filter' htmlFor='provider-filter'>
                         <span>Plataforma</span>
-                        <select id='provider-filter' value={selectedProvider} onChange={(event) => handleFilterChange(event, setSelectedProvider)} disabled={providersLoading}>
+                        <select id='provider-filter' value={selectedProvider} onChange={(event) => { setSelectedProvider(event.target.value); resetResults(); }} disabled={providersLoading}>
                             <option value=''>{providersLoading ? 'Cargando plataformas…' : 'Todas las plataformas'}</option>
                             {providers.map((provider) => <option key={provider.provider_id} value={provider.provider_id}>{provider.provider_name}</option>)}
                         </select>
                     </label>
-                    <label className='provider-filter' htmlFor='genre-filter'>
-                        <span>Género</span>
-                        <select id='genre-filter' value={selectedGenre} onChange={(event) => handleFilterChange(event, setSelectedGenre)} disabled={genresLoading}>
-                            <option value=''>{genresLoading ? 'Cargando géneros…' : 'Todos los géneros'}</option>
-                            {genres.map((genre) => <option key={genre.id} value={genre.id}>{genre.name}</option>)}
+                    <label className='provider-filter' htmlFor='sort-filter'>
+                        <span>Ordenar por</span>
+                        <select id='sort-filter' value={selectedSort} onChange={(event) => { setSelectedSort(event.target.value); resetResults(); }}>
+                            <option value='popularity.desc'>Popularidad</option>
+                            <option value='vote_average.desc'>Mejor puntaje · 6,5+ · 10k+ votos</option>
+                            <option value='now_playing'>En cines (Argentina)</option>
                         </select>
                     </label>
+                    <div className='provider-filter genre-multi-filter'>
+                        <span>Géneros</span>
+                        <details className='genre-filter' ref={genreFilterRef}>
+                            <summary aria-label='Filtrar por géneros'>
+                                {genresLoading ? 'Cargando géneros…' : selectedGenres.length ? `${selectedGenres.length} seleccionados` : 'Todos los géneros'}
+                            </summary>
+                            <div className='genre-filter-options'>
+                                {genres.map((genre) => <label key={genre.id}>
+                                    <input
+                                        type='checkbox'
+                                        checked={selectedGenres.includes(String(genre.id))}
+                                        onChange={() => toggleGenre(genre.id)}
+                                        disabled={genresLoading}
+                                    />
+                                    <span>{genre.name}</span>
+                                </label>)}
+                            </div>
+                        </details>
+                    </div>
+                    <button
+                        type='button'
+                        className='clear-filters-button'
+                        onClick={clearFilters}
+                        disabled={!selectedProvider && selectedGenres.length === 0 && selectedSort === 'popularity.desc'}
+                    >
+                        Limpiar filtros
+                    </button>
                 </div>
             </div>
             <div className='movie-grid'>
@@ -175,7 +227,7 @@ const Home = () => {
             {loading && <p className='loading-state'>Cargando más estrenos…</p>}
             {error && <button className='btn' onClick={() => setRetryCount((count) => count + 1)}>Reintentar</button>}
             {!loading && !error && movies.length === 0 && <p className='empty-state'>No hay estrenos recientes para mostrar.</p>}
-            {!hasMore && movies.length > 0 && <p className='empty-state'>Ya viste todos los estrenos recientes.</p>}
+            {!hasMore && movies.length > 0 && <p className='empty-state'>Llegaste al final de las películas disponibles con estos filtros.</p>}
             <div ref={sentinelRef} className='scroll-sentinel' aria-hidden='true' />
         </>
     );
