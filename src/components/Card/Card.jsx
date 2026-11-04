@@ -39,7 +39,6 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
             localStorage.setItem('results', JSON.stringify(items))
         } else {
             setMovies(items) //Guardo cambios ya que la movie se encuentra en favoritos y necesito cambiar el "corazon"
-            localStorage.setItem('movies', JSON.stringify(items)) //Guardo los cambios en localStorage para al refrescar aparezca como la ultima vez.
         }
     }
 
@@ -70,15 +69,12 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
 
         } else {
             setMovies(items)//Guardo cambios para que se actualice en vivo el cambio de "corazon"
-            localStorage.setItem('movies', JSON.stringify(items)) //Guardo los cambios en localStorage para al refrescar aparezca como la ultima vez.
         }
     }
 
-    console.log(movie.release_date);
-
     return (
-        <div className='col-3 '>
-            <div className=" bg-black animate__animated animate__fadeIn animate__delay-0.2s card my-5 ">
+        <div className='col-3'>
+            <div className="movie-card animate__animated animate__fadeIn animate__delay-0.2s card">
                 <Link to={`/detail?movieID=${movie.id}`}>
                     {
                         movie.poster_path !== null ?
@@ -86,14 +82,14 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
                                 src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
                                 height={420}
                                 width={305}
-                                alt="Not Found"
+                                alt={movie.title}
                             />
                             :
                             <img
                                 src={`https://codigodelbonus.com/wp-content/themes/wp-theme-bc-core-child-betbonuscode/assets/public/img/no-img.jpg`}
                                 height={420}
                                 width={305}
-                                alt="Not Found"
+                                alt={`Póster no disponible para ${movie.title}`}
                             />
 
                     }
@@ -105,12 +101,12 @@ const Card = ({ movie, moviesResults, setMoviesResults }) => {
                             null
                 }
                 <div className="card-body " >
-                    <h5 className="card-title m2 text-center text-light">{movie.title.substring(0, 25)}</h5>
+                    <h5 className="card-title text-center">{movie.title.substring(0, 25)}</h5>
                     {
-                        movie.upcoming ? <p className="card-text text-center text-danger text-light">{movie.release_date}</p>
-                            : <p className="card-text text-center " style={{ color: 'rgb(105, 105, 105)' }}>{movie.overview.substring(0, 60)}...</p>
+                        movie.upcoming ? <p className="card-text text-center">Estreno: {movie.release_date}</p>
+                            : <p className="card-text text-center">{movie.overview.substring(0, 60)}...</p>
                     }
-                    <Link to={`/detail?movieID=${movie.id}`} style={{ display: 'flex', justifyContent: 'center' }} className="btn btn-danger">Detalles</Link>
+                    <Link to={`/detail?movieID=${movie.id}`} className="btn btn-danger">Ver detalles</Link>
                 </div>
             </div>
         </div>

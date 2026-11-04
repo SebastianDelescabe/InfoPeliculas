@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AiFillStar } from 'react-icons/ai';
+import { AiFillStar, AiOutlineArrowLeft } from 'react-icons/ai';
 import { getInfoById } from '../../helpers/getInfoById';
 
 const Detail = () => {
@@ -23,40 +23,42 @@ const Detail = () => {
   }
 
   return (
-    <>
+    <div className='container'>
       {!token && <Navigate to='/' />}
-      {!movieData && <p class="text-center " >Cargando...</p>}
+      {!movieData && <p className="text-center py-5 text-secondary">Cargando película...</p>}
       {movieData &&
-        <div className='row'>
+        <div className='row detail-layout animate__animated animate__fadeIn'>
+          <button
+            onClick={handleOnBack}
+            className="detail-back"
+            type="button"
+          >
+            <AiOutlineArrowLeft aria-hidden="true" />
+            <span>Volver</span>
+          </button>
           <div className='col-4 animate__animated animate__fadeInLeft animate__delay-0.2s'>
             {
               movieData.poster_path !== null ?
-                <img src={`https://image.tmdb.org/t/p/w500/${movieData.poster_path}`} className='img-fluid my-5' alt='img not found' />
+                <img src={`https://image.tmdb.org/t/p/w500/${movieData.poster_path}`} className='detail-poster' alt={`Póster de ${movieData.title}`} />
                 :
-                <img src="https://cloupyblob.blob.core.windows.net/cloupy/image-not-found.png" className='img-fluid my-5' alt='img not found' />
+                <img src="https://cloupyblob.blob.core.windows.net/cloupy/image-not-found.png" className='detail-poster' alt={`Póster no disponible para ${movieData.title}`} />
             }
           </div>
-          <div className='col-8 my-5 text-light d-flex flex-column justify-content-evenly'>
-            <h1 className='text-warning'>{movieData.title}</h1>
+          <div className='col-8 text-light d-flex flex-column detail-copy'>
+            <h1>{movieData.title}</h1>
             <h2>{movieData.tagline}</h2>
-            <h5 className='text-warning'>Sinopsis</h5>
+            <h5>Sinopsis</h5>
             <p>{movieData.overview}</p>
-            <h5 >Rating: {Math.round(movieData.vote_average)}<AiFillStar style={{ color: '#f0ad4e' }} /></h5>
+            <h5 className='rating'>Rating: {Math.round(movieData.vote_average)}<AiFillStar style={{ color: '#f0ad4e' }} /></h5>
             <h5>Generos:</h5>
             <ul className='ul-detail'>
               {movieData.genres.map(e => <li className='li-detail' key={e.id}>{e.name}</li>)}
             </ul>
-            <h5 className='text-danger'>Fecha de estreno: {movieData.release_date}</h5>
+            <h5>Fecha de estreno: {movieData.release_date}</h5>
           </div>
-          <button
-            onClick={handleOnBack}
-            style={{ width: '100%' }}
-            className="  btn btn-danger animate__animated animate__fadeInUp animate__delay-2s"
-          >
-            Volver</button>
         </div>
       }
-    </>
+    </div>
   )
 }
 

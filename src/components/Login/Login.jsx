@@ -40,10 +40,12 @@ const Login = () => {
     return (
         <>
             {token && <Navigate to='/home' />}
-            <div className='col-6 offset-3 mt-5'>
-                <h1 style={{ color: 'white' }}>Iniciar Sesión</h1>
+            <main className='login-page'>
+            <div className='login-card'>
+                <h1>Iniciar sesión</h1>
+                <p>Ingresá para explorar películas y guardar tus favoritas.</p>
                 <form onSubmit={sumbitHandler}>
-                    <label style={{ color: 'white' }} className='form-label d-block mt-2 pt-4'>
+                    <label className='form-label'>
                         <span>Correo Electronico:</span><br />
                         <input
                             className='form-control'
@@ -53,19 +55,21 @@ const Login = () => {
                         />
                     </label>
                     <br />
-                    <label style={{ color: 'white' }} className='form-label d-block mt-2 pt-2'>
+                    <label className='form-label'>
                         <span>Contraseña:</span><br />
                         <input
                             type="password"
                             name="password"
                             className='form-control'
+                            value="react"
                         />
                     </label>
-                    <label style={{ color: 'white' }} className='form-label d-block mt-2 pt-2'>Contraseña: react</label>
                     <br />
-                    <button className='btn btn-success mt-2' type="sumbit">Ingresar</button>
+                    <button className='btn btn-success' type="submit">Ingresar</button>
                 </form>
+                <p className='login-hint'>Demo: deleflix@delescabe.com.ar · contraseña: react</p>
             </div>
+            </main>
         </>
     )
 }

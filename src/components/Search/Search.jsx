@@ -1,7 +1,7 @@
 import React from 'react';
-import swal from 'sweetalert'
+import swal from 'sweetalert';
 import { useNavigate } from 'react-router-dom';
-
+import { AiOutlineSearch } from 'react-icons/ai';
 
 const Search = () => {
 
@@ -19,32 +19,32 @@ const Search = () => {
         } else if (keyword.length === 0) {
             swal("", "Tiene que escribir algo", "warning");
         } else if (keyword.length < 4) {
-            swal("", "Debe escribir cuatro o mas caracteres", "warning");
+            swal("", "Debe escribir cuatro o más caracteres", "warning");
         } else {
             e.currentTarget.text.value = '';
-            navigate(`/results?keyword=${keyword}`);
+            navigate(`/results?keyword=${encodeURIComponent(keyword)}`);
         }
     }
 
     return (
-        <form onSubmit={sumbitHandler}
-            className='d-flex aling-items-center'
-        >
-            <label className='form-label mb-0'>
+        <form onSubmit={sumbitHandler} className='movie-search'>
+            <label className='search-input-wrap'>
+                <AiOutlineSearch className='search-icon' aria-hidden="true" />
                 <input
-                    className='form-control'
+                    className='search-input'
                     name='text'
                     type='text'
-                    placeholder='Buscar...'
-                    defaultValue="Initial value"
+                    placeholder='Buscar películas...'
+                    aria-label='Buscar películas'
                 />
             </label>
             <button
-                className='btn btn-danger bg-transparent'
-                type="sumbit"
-                style={{ marginRight: 10, border: 'none', fontSize: 18 }}
+                className='search-button'
+                type="submit"
+                aria-label='Buscar'
             >
-                🔍</button>
+                <AiOutlineSearch aria-hidden="true" />
+            </button>
         </form>
     )
 }
