@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiFilm, FiSliders } from 'react-icons/fi';
 
 /** Panel lateral con los filtros de período, orden y género de Descubrir. */
 const HomeFilters = ({
@@ -13,10 +14,42 @@ const HomeFilters = ({
     toggleGenre,
     inTheatersOnly,
     selectedProvider,
-    clearFilters
+    setSelectedProvider,
+    providers = [],
+    providersLoading = false,
+    showPlatform = false,
+    clearFilters,
+    clearGenres,
+    cinemaMode = false
 }) => (
-    <aside className='home-filter-panel' aria-labelledby='home-filter-heading'>
-        <h2 id='home-filter-heading'>Filtros</h2>
+    <aside className={`home-filter-panel${cinemaMode ? ' cinema-genre-filter' : ' discover-filter-panel'}`} aria-labelledby='home-filter-heading'>
+        {cinemaMode ? <>
+            <div className='cinema-genre-heading'>
+                <span className='cinema-genre-icon'><FiFilm aria-hidden='true' /></span>
+                <div><h2 id='home-filter-heading'>Géneros</h2><p>Elegí tu próxima función</p></div>
+            </div>
+            {genresLoading ? <span className='cinema-genres-loading'>Cargando géneros…</span> : <div className='cinema-genre-chips'>
+                {genres.map((genre) => {
+                    const selected = selectedGenres.includes(String(genre.id));
+                    return <button
+                        key={genre.id}
+                        type='button'
+                        className={`cinema-genre-chip${selected ? ' is-selected' : ''}`}
+                        aria-pressed={selected}
+                        onClick={() => toggleGenre(genre.id)}
+                    >{genre.name}</button>;
+                })}
+            </div>}
+            {selectedGenres.length > 0 && <button type='button' className='cinema-clear-genres' onClick={clearGenres}>Limpiar géneros</button>}
+        </> : <>
+        <div className='discover-filter-heading'><span><FiSliders aria-hidden='true' /></span><h2 id='home-filter-heading'>Filtros</h2></div>
+        {showPlatform && <label className='provider-filter' htmlFor='provider-filter-desktop'>
+            <span>Plataforma</span>
+            <select id='provider-filter-desktop' value={selectedProvider} onChange={(event) => setSelectedProvider(event.target.value)} disabled={providersLoading}>
+                <option value=''>{providersLoading ? 'Cargando plataformas…' : 'Todas las plataformas'}</option>
+                {providers.map((provider) => <option key={provider.provider_id} value={provider.provider_id}>{provider.provider_name}</option>)}
+            </select>
+        </label>}
         <label className='provider-filter' htmlFor='release-range-filter'>
             <span>Período</span>
             <select id='release-range-filter' value={releaseRange} onChange={(event) => setReleaseRange(event.target.value)}>
@@ -58,6 +91,7 @@ const HomeFilters = ({
         >
             Limpiar filtros
         </button>
+        </>}
     </aside>
 );
 

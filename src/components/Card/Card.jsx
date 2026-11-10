@@ -8,7 +8,7 @@ import useMovieFavorite from './useMovieFavorite';
 /** Compone una tarjeta y delega sus datos y acciones en hooks pequeños. */
 const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWatched, hideFavorite = false }) => {
     const cardRef = useRef(null);
-    const { watchProviders, inTheaters } = useCardMetadata(movie, cardRef);
+    const { watchProviders, inTheaters, imaxLabel } = useCardMetadata(movie, cardRef);
     const { heartPop, toggleFavorite } = useMovieFavorite(movie, moviesResults, setMoviesResults);
 
     // Conserva la posición del listado cuando se abre una ficha desde Destacado.
@@ -28,7 +28,7 @@ const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWat
     const title = movie.title || movie.name || 'Sin título';
     const overview = movie.overview || 'Todavía no hay una sinopsis disponible.';
     const releaseDate = movie.release_date && /^\d{4}-\d{2}-\d{2}$/.test(movie.release_date)
-        ? movie.release_date.split('-').reverse().join('-')
+        ? movie.release_date.split('-').reverse().join('/')
         : movie.release_date || 'Fecha sin confirmar';
     const availabilityProviders = [
         ...(watchProviders?.flatrate || []),
@@ -44,6 +44,7 @@ const Card = ({ movie, moviesResults, setMoviesResults, onMarkWatched, onUndoWat
                     title={title}
                     poster={poster}
                     inTheaters={inTheaters}
+                    imaxLabel={imaxLabel}
                     providers={availabilityProviders}
                     onOpen={rememberHomePosition}
                 />

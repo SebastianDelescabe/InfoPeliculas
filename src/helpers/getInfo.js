@@ -1,4 +1,4 @@
-import { getNowPlayingMoviesPage, getWatchProviders, TMDB_REGION, tmdbGet } from './tmdb';
+import { getImaxReleaseLabel, getNowPlayingMoviesPage, TMDB_REGION, tmdbGet } from './tmdb';
 
 // Convierte una fecha local a AAAA-MM-DD sin desplazar el día por zona horaria.
 const localDate = (date) => {
@@ -24,7 +24,8 @@ export const getInfo = async (
     genreIds = [],
     sortBy = 'popularity.desc',
     releaseRange = 'last_year',
-    inTheatersOnly = false
+    inTheatersOnly = false,
+    imaxOnly = false
 ) => {
     const today = new Date();
     const oneYearAgo = new Date(today);
@@ -35,42 +36,29 @@ export const getInfo = async (
         const response = await getNowPlayingMoviesPage(page);
         let movies = response.results || [];
 
-        if (releaseRange === 'last_year') {
-            const minDate = localDate(oneYearAgo);
-            const maxDate = localDate(today);
-            movies = movies.filter((movie) => movie.release_date && movie.release_date >= minDate && movie.release_date <= maxDate);
-        }
-
         if (genreIds.length) {
             const selectedGenreIds = genreIds.map(Number);
             movies = movies.filter((movie) => selectedGenreIds.every((id) => movie.genre_ids?.includes(id)));
         }
 
-        if (providerId) {
-            const providerIds = movies.map(async (movie) => {
-                const availability = await getWatchProviders(movie.id);
-                const availableTypes = monetizationType.split('|');
-                const isAvailable = availableTypes.some((type) =>
-                    availability?.[type]?.some((provider) => String(provider.provider_id) === String(providerId))
-                );
-                return isAvailable ? movie.id : null;
-            });
-            const availableMovieIds = new Set((await Promise.all(providerIds)).filter(Boolean));
-            movies = movies.filter((movie) => availableMovieIds.has(movie.id));
+        if (imaxOnly) {
+            const imaxMovies = await Promise.all(movies.map(async (movie) => ({
+                movie,
+                imaxLabel: await getImaxReleaseLabel(movie.id).catch(() => '')
+            })));
+            movies = imaxMovies.filter(({ imaxLabel }) => imaxLabel).map(({ movie }) => movie);
         }
 
         return {
             movies: movies
-                .sort((first, second) => sortBy === 'vote_average.desc'
-                    ? weightedRating(second) - weightedRating(first)
-                    : 0)
                 .map((movie) => ({
                     id: movie.id,
                     poster_path: movie.poster_path,
                     title: movie.title,
                     overview: movie.overview,
                     release_date: movie.release_date,
-                    favorite: false
+                    favorite: false,
+                    cinemaListing: true
                 })),
             totalPages: response.total_pages || 1
         };

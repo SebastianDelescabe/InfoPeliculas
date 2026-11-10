@@ -67,8 +67,18 @@ const Detail = () => {
         ? `https://image.tmdb.org/t/p/w500/${movieData.poster_path}`
         : FALLBACK_POSTER;
     const releaseDate = movieData.release_date && /^\d{4}-\d{2}-\d{2}$/.test(movieData.release_date)
-        ? movieData.release_date.split('-').reverse().join('-')
+        ? movieData.release_date.split('-').reverse().join('/')
         : movieData.release_date || 'Sin fecha';
+    const localToday = new Date();
+    const today = new Date(localToday.getTime() - localToday.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+    const argentinaReleaseDate = movieData.release_dates?.results
+        ?.find((country) => country.iso_3166_1 === 'AR')
+        ?.release_dates?.map((release) => release.release_date?.slice(0, 10))
+        .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date || ''))
+        .sort()[0];
+    const isUpcoming = argentinaReleaseDate
+        ? argentinaReleaseDate > today
+        : /^\d{4}-\d{2}-\d{2}$/.test(movieData.release_date || '') && movieData.release_date > today;
 
     return (
         <div className='detail-page animate__animated animate__fadeIn'>
@@ -76,6 +86,7 @@ const Detail = () => {
                 movie={movieData}
                 poster={poster}
                 releaseDate={releaseDate}
+                upcoming={isUpcoming}
                 inTheaters={inTheaters}
                 onBack={() => window.history.back()}
             />

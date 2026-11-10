@@ -5,7 +5,7 @@ import { notify } from '../../helpers/notify';
 import { getCommonMovieGenres, getStreamingProviders } from '../../helpers/tmdb';
 
 const HOME_FEED_STORAGE_KEY = 'home-feed-state';
-const HOME_FEED_VERSION = 9;
+const HOME_FEED_VERSION = 11;
 
 // Lee el feed guardado para volver a la lista y filtros de la sesión anterior.
 const readSavedFeed = () => {
@@ -35,6 +35,7 @@ const useHomeFeed = () => {
     const [selectedSort, setSelectedSort] = useState(savedFeed?.selectedSort || 'popularity.desc');
     const [releaseRange, setReleaseRange] = useState(savedFeed?.releaseRange || 'last_year');
     const [inTheatersOnly, setInTheatersOnly] = useState(savedFeed?.inTheatersOnly || false);
+    const [imaxOnly, setImaxOnly] = useState(savedFeed?.imaxOnly || false);
     const [selectedGenres, setSelectedGenres] = useState(() => {
         if (Array.isArray(savedFeed?.selectedGenres)) return savedFeed.selectedGenres;
         return savedFeed?.selectedGenre ? [String(savedFeed.selectedGenre)] : [];
@@ -79,7 +80,7 @@ const useHomeFeed = () => {
         setLoading(true);
         setError(false);
 
-        getInfo(page, selectedProvider, selectedMonetizationType, selectedGenres, selectedSort, releaseRange, inTheatersOnly)
+        getInfo(page, selectedProvider, selectedMonetizationType, selectedGenres, selectedSort, releaseRange, inTheatersOnly, imaxOnly)
             .then((response) => {
                 if (!active) return;
                 const favoriteIds = new Set(favoritesRef.current.map((movie) => movie.id));
@@ -103,7 +104,7 @@ const useHomeFeed = () => {
             });
 
         return () => { active = false; };
-    }, [inTheatersOnly, page, releaseRange, retryCount, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
+    }, [imaxOnly, inTheatersOnly, page, releaseRange, retryCount, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
 
     // Persiste filtros y películas para retomar la navegación en esta pestaña.
     useEffect(() => {
@@ -117,6 +118,7 @@ const useHomeFeed = () => {
                 selectedSort,
                 releaseRange,
                 inTheatersOnly,
+                imaxOnly,
                 selectedGenres,
                 monetizationType: selectedMonetizationType,
                 scrollY: window.scrollY
@@ -124,7 +126,7 @@ const useHomeFeed = () => {
         } catch {
             // La navegación sigue disponible aunque el almacenamiento esté lleno.
         }
-    }, [hasMore, inTheatersOnly, movies, page, releaseRange, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
+    }, [hasMore, imaxOnly, inTheatersOnly, movies, page, releaseRange, selectedGenres, selectedMonetizationType, selectedProvider, selectedSort]);
 
     // Pide más resultados cuando el usuario se acerca al final de la lista.
     useEffect(() => {
@@ -168,9 +170,18 @@ const useHomeFeed = () => {
         setSelectedSort('popularity.desc');
         setReleaseRange('last_year');
         setInTheatersOnly(false);
+        setImaxOnly(false);
         if (genreFilterRef.current) genreFilterRef.current.open = false;
         resetResults();
     }, [resetResults]);
+
+    const clearGenres = useCallback(() => {
+        setSelectedGenres([]);
+        if (genreFilterRef.current) genreFilterRef.current.open = false;
+        resetResults();
+    }, [resetResults]);
+
+    const updateImaxOnly = useCallback((value) => changeFilter(setImaxOnly, value), [changeFilter]);
 
     const retry = useCallback(() => setRetryCount((count) => count + 1), []);
     const updateProvider = useCallback((value) => changeFilter(setSelectedProvider, value), [changeFilter]);
@@ -184,7 +195,8 @@ const useHomeFeed = () => {
         selectedSort, setSelectedSort: updateSort,
         releaseRange, setReleaseRange: updateReleaseRange,
         inTheatersOnly, setInTheatersOnly: updateTheaterFilter,
-        selectedGenres, genres, genresLoading, genreFilterRef, toggleGenre,
+        imaxOnly, setImaxOnly: updateImaxOnly,
+        selectedGenres, genres, genresLoading, genreFilterRef, toggleGenre, clearGenres,
         providers, providersLoading, clearFilters, sentinelRef
     };
 };

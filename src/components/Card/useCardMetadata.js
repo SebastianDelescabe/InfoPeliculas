@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getNowPlayingMovieIds, getWatchProviders } from '../../helpers/tmdb';
+import { getImaxReleaseLabel, getNowPlayingMovieIds, getWatchProviders } from '../../helpers/tmdb';
 
 /** Carga proveedores y cartelera cuando la tarjeta se acerca a la vista. */
 const useCardMetadata = (movie, cardRef) => {
     const [watchProviders, setWatchProviders] = useState(undefined);
     const [inTheaters, setInTheaters] = useState(false);
+    const [imaxLabel, setImaxLabel] = useState('');
 
     useEffect(() => {
         const card = cardRef.current;
@@ -18,6 +19,11 @@ const useCardMetadata = (movie, cardRef) => {
             getNowPlayingMovieIds()
                 .then((movieIds) => { if (active) setInTheaters(movieIds.has(movie.id)); })
                 .catch(() => {});
+            if (movie.cinemaListing) {
+                getImaxReleaseLabel(movie.id)
+                    .then((label) => { if (active) setImaxLabel(label); })
+                    .catch(() => {});
+            }
         };
 
         if (!('IntersectionObserver' in window)) {
@@ -36,9 +42,9 @@ const useCardMetadata = (movie, cardRef) => {
             active = false;
             observer.disconnect();
         };
-    }, [cardRef, movie.id, movie.upcoming]);
+    }, [cardRef, movie.cinemaListing, movie.id, movie.upcoming]);
 
-    return { watchProviders, inTheaters };
+    return { watchProviders, inTheaters, imaxLabel };
 };
 
 export default useCardMetadata;

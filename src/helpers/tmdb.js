@@ -14,6 +14,7 @@ export const tmdbGet = (path, params = {}) => client.get(path, {
 });
 
 const watchProviderCache = new Map();
+const imaxReleaseCache = new Map();
 let streamingProviderListRequest;
 let movieGenreListRequest;
 let nowPlayingMovieIdsRequest;
@@ -55,6 +56,30 @@ export const getWatchProviders = async (movieId) => {
         return providers;
     } catch (error) {
         watchProviderCache.delete(cacheKey);
+        throw error;
+    }
+};
+
+/** Indica IMAX sólo si TMDB incluye esa mención en los datos de estreno. */
+export const getImaxReleaseLabel = async (movieId) => {
+    const cacheKey = String(movieId);
+    if (imaxReleaseCache.has(cacheKey)) return imaxReleaseCache.get(cacheKey);
+
+    const request = tmdbGet(`/movie/${movieId}/release_dates`).then((response) => {
+        const countries = response.data.results || [];
+        const hasImaxRelease = (country) => (country.release_dates || [])
+            .some((release) => /\bimax\b/i.test(release.note || ''));
+        if (countries.some((country) => country.iso_3166_1 === TMDB_REGION && hasImaxRelease(country))) return 'IMAX Argentina';
+        return countries.some(hasImaxRelease) ? 'Disponible en IMAX' : '';
+    });
+    imaxReleaseCache.set(cacheKey, request);
+
+    try {
+        const label = await request;
+        imaxReleaseCache.set(cacheKey, label);
+        return label;
+    } catch (error) {
+        imaxReleaseCache.delete(cacheKey);
         throw error;
     }
 };
